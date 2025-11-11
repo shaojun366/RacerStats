@@ -76,28 +76,31 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // 调试：确保按钮容器可见
+        // 强制显示所有UI元素
         binding.actionsContainer.visibility = View.VISIBLE
         binding.statsContainer.visibility = View.VISIBLE
+        binding.btnStartFinish.visibility = View.VISIBLE
+        binding.btnPause.visibility = View.VISIBLE
+        binding.btnSetLine.visibility = View.VISIBLE
+        
+        // 设置按钮文本以确保它们有内容
+        binding.btnStartFinish.text = "START RECORDING"
+        binding.btnPause.text = "PAUSE"
+        binding.btnSetLine.text = "SET LINE"
         
         // 调试：添加日志
-        android.util.Log.d("TrackFragment", "onViewCreated: Setting up UI")
+        android.util.Log.d("TrackFragment", "onViewCreated: All UI elements forced visible")
         
-        // 临时禁用地图，直接测试按钮功能
-        android.util.Log.d("TrackFragment", "Map temporarily disabled for testing")
-        binding.btnStartFinish.text = "Start Recording (No Map)"
-        
-        // 原地图代码（暂时注释）
-        /*
+        // 初始化地图
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
         if (mapFragment == null) {
             android.util.Log.e("TrackFragment", "MapFragment is null!")
             // 如果地图加载失败，至少显示按钮
-            binding.btnStartFinish.text = "Map Error - Click to Start"
+            binding.btnStartFinish.text = "Start Recording (Map Error)"
         } else {
+            android.util.Log.d("TrackFragment", "Initializing Google Maps")
             mapFragment.getMapAsync(this)
         }
-        */
         
         setupUI()
         observeViewModel()
@@ -135,6 +138,15 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
         binding.btnSetLine.setOnClickListener {
             viewModel.toggleLineSettingMode()
         }
+        
+        // 宽容度设置按钮
+        binding.btnTolerance.setOnClickListener {
+            showToleranceSelectionDialog()
+        }
+        
+        // 初始化宽容度显示
+        val currentTolerance = viewModel.getCurrentTolerance()
+        updateToleranceButton("", currentTolerance)
     }
     
     private fun checkLocationPermissions(): Boolean {
@@ -194,27 +206,34 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     }
     
     private fun updateUI(state: TrackRecorder.RecordingState) {
+        // 强制确保按钮容器可见
+        binding.actionsContainer.visibility = View.VISIBLE
+        binding.btnStartFinish.visibility = View.VISIBLE
+        
         when (state) {
             is TrackRecorder.RecordingState.Idle -> {
-                binding.btnStartFinish.setText(R.string.start_recording)
-                binding.btnPause.visibility = View.GONE
-                binding.btnSetLine.visibility = View.GONE
+                binding.btnStartFinish.text = "Start Recording"
+                binding.btnPause.visibility = View.VISIBLE // 暂时都显示，方便调试
+                binding.btnSetLine.visibility = View.VISIBLE
                 binding.tvDistance.text = "0.0 km"
                 binding.tvPointCount.text = "0 points"
+                android.util.Log.d("TrackFragment", "UI State: Idle")
             }
             is TrackRecorder.RecordingState.Recording -> {
-                binding.btnStartFinish.setText(R.string.finish)
+                binding.btnStartFinish.text = "Finish"
                 binding.btnPause.visibility = View.VISIBLE
-                binding.btnPause.setText(R.string.pause)
+                binding.btnPause.text = "Pause"
                 binding.btnSetLine.visibility = View.VISIBLE
                 updateTrackStats(state.distance, state.pointCount)
+                android.util.Log.d("TrackFragment", "UI State: Recording")
             }
             is TrackRecorder.RecordingState.Paused -> {
-                binding.btnStartFinish.setText(R.string.finish)
+                binding.btnStartFinish.text = "Finish"
                 binding.btnPause.visibility = View.VISIBLE
-                binding.btnPause.setText(R.string.resume)
+                binding.btnPause.text = "Resume"
                 binding.btnSetLine.visibility = View.VISIBLE
                 updateTrackStats(state.distance, state.pointCount)
+                android.util.Log.d("TrackFragment", "UI State: Paused")
             }
         }
     }
@@ -342,6 +361,7 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     }
     
     override fun onMapReady(googleMap: GoogleMap) {
+        android.util.Log.d("TrackFragment", "Google Maps ready!")
         map = googleMap
         setupMapLocation()
         
@@ -349,14 +369,22 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
             isMyLocationButtonEnabled = true
             isZoomControlsEnabled = true
             isCompassEnabled = true
+            isMapToolbarEnabled = false
         }
         
+        // 设置地图类型为混合模式（卫星+道路）
+        map?.mapType = GoogleMap.MAP_TYPE_HYBRID
+        
         map?.setOnMapClickListener { latLng ->
+            android.util.Log.d("TrackFragment", "Map clicked at: ${latLng.latitude}, ${latLng.longitude}")
             viewModel.handleMapClick(GpsPoint(latLng.latitude, latLng.longitude))
         }
         
-        // 设置默认位置（如果有最后已知位置的话）
+        // 设置默认位置
         setDefaultMapLocation()
+        
+        // 更新按钮文本表示地图已就绪
+        binding.btnStartFinish.text = getString(R.string.start_recording)
     }
     
     private fun setupMapLocation() {
@@ -393,6 +421,51 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
 
     private fun showSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+    }
+    
+    private fun showToleranceSelectionDialog() {
+        val toleranceOptions = arrayOf(
+            "Precision Track (25m)",
+            "Street Circuit (40m)",
+            "General Road (50m)", 
+            "Highway (80m)"
+        )
+        
+        val toleranceValues = arrayOf(
+            TrackMatcher.THRESHOLD_PRECISION_TRACK,
+            TrackMatcher.THRESHOLD_STREET_CIRCUIT,
+            TrackMatcher.THRESHOLD_GENERAL_ROAD,
+            TrackMatcher.THRESHOLD_HIGHWAY
+        )
+        
+        val currentTolerance = viewModel.getCurrentTolerance()
+        val currentIndex = toleranceValues.indexOfFirst { 
+            kotlin.math.abs(it - currentTolerance) < 1.0 
+        }.takeIf { it >= 0 } ?: 1 // 默认选择 Street Circuit
+        
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Select Track Tolerance")
+            .setSingleChoiceItems(toleranceOptions, currentIndex) { dialog, which ->
+                val selectedTolerance = toleranceValues[which]
+                val selectedName = toleranceOptions[which]
+                
+                viewModel.setTolerance(selectedTolerance)
+                updateToleranceButton(selectedName, selectedTolerance)
+                
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun updateToleranceButton(@Suppress("UNUSED_PARAMETER") name: String, tolerance: Double) {
+        val shortName = when {
+            tolerance <= 25.0 -> "Precision (${tolerance.toInt()}m)"
+            tolerance <= 40.0 -> "Street (${tolerance.toInt()}m)"
+            tolerance <= 50.0 -> "Road (${tolerance.toInt()}m)"
+            else -> "Highway (${tolerance.toInt()}m)"
+        }
+        binding.btnTolerance.text = shortName
     }
     
     override fun onDestroyView() {

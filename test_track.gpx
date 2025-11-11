@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RacerStats Test">
+  <trk>
+    <name>Test Race Track</name>
+    <trkseg>
+      <!-- 起点 -->
+      <trkpt lat="39.9042" lon="116.4074">
+        <time>2025-11-11T10:00:00Z</time>
+      </trkpt>
+      <!-- 第一个弯道 -->
+      <trkpt lat="39.9052" lon="116.4084">
+        <time>2025-11-11T10:00:05Z</time>
+      </trkpt>
+      <trkpt lat="39.9062" lon="116.4094">
+        <time>2025-11-11T10:00:10Z</time>
+      </trkpt>
+      <!-- 直道 -->
+      <trkpt lat="39.9072" lon="116.4104">
+        <time>2025-11-11T10:00:15Z</time>
+      </trkpt>
+      <trkpt lat="39.9082" lon="116.4114">
+        <time>2025-11-11T10:00:20Z</time>
+      </trkpt>
+      <trkpt lat="39.9092" lon="116.4124">
+        <time>2025-11-11T10:00:25Z</time>
+      </trkpt>
+      <!-- 第二个弯道 -->
+      <trkpt lat="39.9102" lon="116.4134">
+        <time>2025-11-11T10:00:30Z</time>
+      </trkpt>
+      <trkpt lat="39.9112" lon="116.4124">
+        <time>2025-11-11T10:00:35Z</time>
+      </trkpt>
+      <trkpt lat="39.9122" lon="116.4114">
+        <time>2025-11-11T10:00:40Z</time>
+      </trkpt>
+      <!-- 返回直道 -->
+      <trkpt lat="39.9132" lon="116.4104">
+        <time>2025-11-11T10:00:45Z</time>
+      </trkpt>
+      <trkpt lat="39.9122" lon="116.4094">
+        <time>2025-11-11T10:00:50Z</time>
+      </trkpt>
+      <trkpt lat="39.9112" lon="116.4084">
+        <time>2025-11-11T10:00:55Z</time>
+      </trkpt>
+      <!-- 回到起点 -->
+      <trkpt lat="39.9102" lon="116.4074">
+        <time>2025-11-11T10:01:00Z</time>
+      </trkpt>
+      <trkpt lat="39.9092" lon="116.4064">
+        <time>2025-11-11T10:01:05Z</time>
+      </trkpt>
+      <trkpt lat="39.9082" lon="116.4074">
+        <time>2025-11-11T10:01:10Z</time>
+      </trkpt>
+      <trkpt lat="39.9072" lon="116.4074">
+        <time>2025-11-11T10:01:15Z</time>
+      </trkpt>
+      <trkpt lat="39.9062" lon="116.4074">
+        <time>2025-11-11T10:01:20Z</time>
+      </trkpt>
+      <trkpt lat="39.9052" lon="116.4074">
+        <time>2025-11-11T10:01:25Z</time>
+      </trkpt>
+      <!-- 终点（接近起点） -->
+      <trkpt lat="39.9042" lon="116.4074">
+        <time>2025-11-11T10:01:30Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
