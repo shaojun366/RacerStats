@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Lap HUD · Track Builder · Review (Prototype)</title>
+    <style>
+        :root{
+          --bg:#0b0f14;       /* 主背景 */
+          --card:#121823;     /* 卡片 */
+          --muted:#7b8794;    /* 次要文字 */
+          --txt:#e8ecef;      /* 主文字 */
+          --accent:#00b2ff;   /* 强调 */
+          --good:#22c55e;     /* 绿色 */
+          --bad:#ff4d4f;      /* 红色 */
+          --chip:#0f1622;     /* 状态胶囊 */
+          --line:#1e2735;     /* 细线 */
+        }
+        html,body{height:100%;background:var(--bg);color:var(--txt);font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial,
+          "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";}
+        *{box-sizing:border-box}
+        .app{height:100%;display:grid;grid-template-rows:auto 1fr auto;}
+        header{position:sticky;top:0;z-index:20;background:linear-gradient(to bottom, rgba(11,15,20,.95), rgba(11,15,20,.75));backdrop-filter:blur(8px);}
+        .topbar{display:flex;gap:.5rem;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+        .title{font-weight:600;letter-spacing:.3px}
+        .chips{display:flex;gap:.5rem;align-items:center;}
+        .chip{display:flex;align-items:center;gap:.4rem;background:var(--chip);border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:.85rem;color:var(--muted)}
+        .chip strong{color:var(--txt)}
+
+        main{overflow:auto}
+        section{display:none;min-height:calc(100dvh - 128px);padding:16px}
+        section.active{display:block}
+
+        .card{background:linear-gradient(180deg, rgba(18,24,35,.9), rgba(18,24,35,.8));border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 4px 24px rgba(0,0,0,.25)}
+        .stack{display:grid;gap:12px}
+
+        /* Live HUD */
+        .hud{display:grid;gap:16px}
+        .big{font-variant-numeric:tabular-nums;letter-spacing:.5px}
+        .big.time{font-size:56px;font-weight:700;text-align:center}
+        .row{display:flex;align-items:center;justify-content:space-between}
+        .metric{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+        .metric .label{font-size:14px;color:var(--muted);font-weight:500;letter-spacing:.3px}
+
+        .delta-wrap{position:relative;height:18px;background:#0e1420;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+        .delta-axis{position:absolute;left:50%;top:0;bottom:0;width:2px;background:#223047}
+        .delta-ind{position:absolute;top:1px;bottom:1px;width:28px;border-radius:999px;background:var(--good);transform:translateX(-50%);transition:transform .12s ease, background .12s ease}
+        .delta-wrap.positive .delta-ind{background:var(--bad)}
+        .delta-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+
+        .speed{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px}
+        .speed .val{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+        .bar{height:10px;background:#0e1420;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+        .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg, var(--accent), #7dd3fc)}
+
+        /* Floating controls */
+        .fab{position:fixed;right:16px;bottom:84px;display:flex;gap:10px}
+        .btn{background:var(--accent);color:#002133;border:none;border-radius:999px;padding:12px 18px;font-weight:700;cursor:pointer;box-shadow:0 6px 22px rgba(0,178,255,.35)}
+        .btn.secondary{background:#1a2435;color:var(--txt);border:1px solid var(--line);box-shadow:none}
+
+        /* Bottom nav */
+        nav{position:sticky;bottom:0;background:linear-gradient(to top, rgba(11,15,20,.98), rgba(11,15,20,.85));backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+        .tabs{display:grid;grid-template-columns:1fr 1fr 1fr}
+        .tab{padding:12px 10px;text-align:center;color:var(--muted);cursor:pointer}
+        .tab.active{color:var(--txt);font-weight:600;border-top:2px solid var(--accent)}
+
+        /* Track builder */
+        .builder{display:grid;gap:12px}
+        .canvas-wrap{background:#0e1420;border:1px solid var(--line);border-radius:16px;position:relative;overflow:hidden}
+        canvas{display:block;width:100%;height:360px}
+        .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+        .toolbar .btn{padding:10px 14px}
+        textarea{width:100%;min-height:140px;background:#0e1420;border:1px solid var(--line);border-radius:12px;color:var(--txt);padding:12px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
+
+        /* Review */
+        .laps{display:grid;gap:8px}
+        .lap-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#0e1420;border:1px solid var(--line);border-radius:12px}
+        .lap-item em{color:var(--muted);font-style:normal}
+        .best{color:var(--good);}
+
+        @media (min-width:680px){
+          .hud{grid-template-columns:1fr 1fr;align-items:start}
+          .card.full{grid-column:1/-1}
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div class="topbar">
+            <div class="title">RaceStats</div>
+            <div class="chips">
+                <div class="chip">Hz：<strong id="chipHz">1</strong></div>
+                <div class="chip">Sats：<strong id="chipSats">0</strong></div>
+                <div class="chip">Acc：<strong id="chipAcc">--</strong> m</div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Live -->
+        <section id="live" class="active">
+            <div class="hud">
+                <div class="card full stack" aria-live="polite">
+                    <div class="big time" id="thisLap">00:00.000</div>
+
+                    <div class="row">
+                        <div class="metric" id="deltaText">Δ +0.000 s</div>
+                        <div class="metric">
+                            <div class="label">Predicted</div>
+                            <span id="predicted">--:--.---</span>
+                        </div>
+                    </div>
+
+                    <div class="delta-wrap" id="deltaWrap" title="Delta vs Best (negative is faster)">
+                        <div class="delta-axis"></div>
+                        <div class="delta-ind" id="deltaInd"></div>
+                    </div>
+                    <div class="delta-scale"><span>-2.0s</span><span>0</span><span>+2.0s</span></div>
+
+                    <div class="speed">
+                        <div>
+                            <div class="label">Speed</div>
+                            <div class="val" id="speed">0.0 km/h</div>
+                        </div>
+                        <div class="bar" aria-hidden="true"><i id="spdBar"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fab">
+                <button class="btn" id="btnStart">开始</button>
+                <button class="btn secondary" id="btnLap">手动过线</button>
+            </div>
+        </section>
+
+        <!-- Track Builder -->
+        <section id="track">
+            <div class="builder">
+                <div class="card stack">
+                    <h3 style="margin:0">赛道建模 · 录一圈自动生成</h3>
+                    <div class="canvas-wrap"><canvas id="trackCanvas" width="1080" height="720"></canvas></div>
+                    <div class="toolbar">
+                        <button class="btn" id="btnRecord">录制一圈（模拟）</button>
+                        <button class="btn" id="btnAuto">自动建赛道</button>
+                        <button class="btn secondary" id="btnClear">清空</button>
+                        <button class="btn" id="btnSave">保存为赛道</button>
+                    </div>
+                    <small style="color:var(--muted)">提示：可拖拽白色方块微调 SF 线两端。</small>
+                </div>
+                <div class="card stack">
+                    <h3 style="margin:0">赛道 JSON</h3>
+                    <textarea id="trackJson" placeholder='点击“保存为赛道”在这里查看 JSON'></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- Review -->
+        <section id="review">
+            <div class="card stack">
+                <h3 style="margin:0 0 8px">圈速回放</h3>
+                <div class="laps" id="laps"></div>
+            </div>
+        </section>
+    </main>
+
+    <nav>
+        <div class="tabs">
+            <div class="tab active" data-tab="live">Live</div>
+            <div class="tab" data-tab="track">Track</div>
+            <div class="tab" data-tab="review">Review</div>
+        </div>
+    </nav>
+</div>
+
+<script>
+    // ===== 工具函数 =====
+    const pad2 = n => (n<10?"0":"")+n;
+    function fmtTime(ms){
+      const sign = ms<0?"-":""; ms = Math.abs(ms);
+      const m = Math.floor(ms/60000); const s = Math.floor((ms%60000)/1000); const x = ms%1000;
+      return `${sign}${pad2(m)}:${pad2(s)}.${x.toString().padStart(3,'0')}`;
+    }
+
+    // ===== 导航切换 =====
+    const tabs = document.querySelectorAll('.tab');
+    const sections = { live: document.getElementById('live'), track: document.getElementById('track'), review: document.getElementById('review') };
+    tabs.forEach(t=>t.onclick=()=>{
+      tabs.forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const id=t.dataset.tab; Object.values(sections).forEach(s=>s.classList.remove('active'));
+      sections[id].classList.add('active');
+    });
+
+    // ===== Live 模拟器（可替换为真实 GPS 数据流） =====
+    let running=false, thisLap=0, speed=0, sCur=0;
+    const L = 3000; // 赛道长度 3000 m (模拟)
+    // 生成一个“最佳真实圈”的时间表 T_best(s)
+    const sStep=5; const N=Math.floor(L/sStep)+1; const Tbest=new Array(N);
+    let base=0; for(let i=0;i<N;i++){ const frac=i/N; // 速度随赛段变化
+      const v= 28 + 4*Math.sin(frac*2*Math.PI) + 2*Math.sin(frac*6*Math.PI);
+      base += sStep/Math.max(5, v); Tbest[i]=base; }
+    const TbestTotal = Tbest[N-1]; // 单位：秒
+
+    // 拟合最佳圈（逐点最小 + 轻微平滑，这里用同一条作为示意）
+    const Topt = Tbest.slice(); const ToptTotal = TbestTotal;
+
+    const elLap = document.getElementById('thisLap');
+    const elDelta = document.getElementById('deltaText');
+    const elPred = document.getElementById('predicted');
+    const elInd = document.getElementById('deltaInd');
+    const elWrap = document.getElementById('deltaWrap');
+    const elSpd = document.getElementById('speed');
+    const elSpdBar = document.getElementById('spdBar');
+    const lapsList = document.getElementById('laps');
+
+    function interp(arr, s){ // s: 米 -> 秒
+      const i = Math.min(arr.length-2, Math.max(0, Math.floor(s/sStep)));
+      const t = (s - i*sStep)/sStep; return arr[i]*(1-t)+arr[i+1]*t;
+    }
+
+    function tick(dt){
+      if(!running) return;
+      // 生成速度（km/h）并转换 m/s
+      const t = performance.now()/1000;
+      const v = 60 + 20*Math.sin(t*0.6) + 5*Math.cos(t*1.7); // km/h 模拟
+      speed = Math.max(0, v);
+      const vms = speed/3.6;
+      sCur = (sCur + vms*dt) % L;
+      thisLap += dt*1000;
+
+      // Delta：当前用时 vs 最佳圈在同一 s 的用时
+      const Tcur = thisLap/1000;           // s
+      const Tref = interp(Tbest, sCur);    // s
+      const delta = (Tcur - Tref)*1000;    // ms
+
+      // Predicted：已用时 + (Topt(L)-Topt(s))
+      const pred = (Tcur + (ToptTotal - interp(Topt, sCur)))*1000;
+
+      // UI
+      elLap.textContent = fmtTime(thisLap);
+      elDelta.textContent = `Δ ${delta>=0?'+':''}${(delta/1000).toFixed(3)} s`;
+      elWrap.classList.toggle('positive', delta>0);
+      const clamp = Math.max(-2000, Math.min(2000, delta));
+      const px = (clamp/2000)*50; // -50%..+50%
+      elInd.style.transform = `translateX(calc(${50+px}% - 50%))`;
+      elPred.textContent = fmtTime(pred);
+      elSpd.textContent = `${speed.toFixed(1)} km/h`;
+      elSpdBar.style.width = `${Math.min(100, speed/2)}%`;
+    }
+
+    let last=performance.now();
+    function loop(){
+      const now=performance.now(); const dt=(now-last)/1000; last=now; tick(dt); requestAnimationFrame(loop);
+    }
+    loop();
+
+    // 控件
+    const btnStart=document.getElementById('btnStart');
+    btnStart.onclick=()=>{running=!running; btnStart.textContent = running? '暂停':'开始'};
+    // 手动过线：重置本圈并记录到 Review
+    const btnLap=document.getElementById('btnLap');
+    btnLap.onclick=()=>{
+      if(!running) return;
+      const rec = document.createElement('div'); rec.className='lap-item';
+      const t = fmtTime(thisLap); rec.innerHTML = `<div>Lap ${lapsList.children.length+1}</div><div><strong>${t}</strong> <em>Δ ${(thisLap/1000 - TbestTotal).toFixed(3)}s</em></div>`;
+      // 更新最佳（如果更好）
+      if(thisLap/1000 < TbestTotal){ rec.classList.add('best'); }
+      lapsList.prepend(rec);
+      thisLap=0; sCur=0;
+    };
+
+    // ===== Track Builder（模拟） =====
+    const cvs=document.getElementById('trackCanvas');
+    const ctx=cvs.getContext('2d');
+    let recPts=[];          // 录制的一圈（像素坐标）
+    let centerline=[];      // 降采样/平滑后的中心线
+    let sfLine=null;        // {a:{x,y}, b:{x,y}}
+    let dragHandle=null;    // 'a' or 'b'
+
+    function draw(){
+      const w=cvs.width, h=cvs.height; ctx.clearRect(0,0,w,h);
+      // 背景网格
+      ctx.fillStyle='#0b111c'; ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle='#122034'; ctx.lineWidth=1;
+      for(let x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+      for(let y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+      // 录制轨迹
+      if(recPts.length>1){
+        ctx.strokeStyle='#00b2ff'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(recPts[0].x, recPts[0].y);
+        for(const p of recPts) ctx.lineTo(p.x,p.y); ctx.stroke();
+      }
+      // 中心线
+      if(centerline.length>1){
+        ctx.strokeStyle='#7dd3fc'; ctx.lineWidth=2; ctx.setLineDash([6,6]);
+        ctx.beginPath(); ctx.moveTo(centerline[0].x, centerline[0].y);
+        for(const p of centerline) ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.setLineDash([]);
+      }
+      // SF 线
+      if(sfLine){
+        ctx.strokeStyle='#22c55e'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(sfLine.a.x, sfLine.a.y); ctx.lineTo(sfLine.b.x, sfLine.b.y); ctx.stroke();
+        // 端点把手
+        for(const k of ['a','b']){
+          const p=sfLine[k]; ctx.fillStyle='#ffffff'; ctx.strokeStyle='#1e2735'; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.rect(p.x-8,p.y-8,16,16); ctx.fill(); ctx.stroke();
+        }
+      }
+    }
+
+    function simulateLap(){
+      // 生成一条椭圆+弯角的闭环曲线
+      const w=cvs.width, h=cvs.height; const cx=w/2, cy=h/2; const rx=w*0.33, ry=h*0.27;
+      recPts = []; const steps=600;
+      for(let i=0;i<=steps;i++){
+        const t=i/steps*2*Math.PI; let x=cx+rx*Math.cos(t), y=cy+ry*Math.sin(t);
+        // 加点噪声模拟抖动
+        x += 6*Math.sin(t*9); y += 6*Math.cos(t*7);
+        recPts.push({x,y});
+      }
+      draw();
+    }
+
+    function autoBuild(){
+      if(recPts.length<10){ alert('请先录制一圈（模拟）'); return; }
+      // 降采样：每隔 N 点取一个
+      centerline = []; const N=6; for(let i=0;i<recPts.length;i+=N){ centerline.push(recPts[i]); }
+      // 取航向变化最小的一段放 SF 线（近似在直道）
+      let bestI=20, bestVar=1e9;
+      for(let i=10;i<centerline.length-10;i++){
+        const p0=centerline[i-10], p1=centerline[i], p2=centerline[i+10];
+        const a=Math.atan2(p1.y-p0.y,p1.x-p0.x); const b=Math.atan2(p2.y-p1.y,p2.x-p1.x);
+        const varAbs=Math.abs(((b-a+Math.PI*3)%(Math.PI*2))-Math.PI);
+        if(varAbs<bestVar){bestVar=varAbs;bestI=i;}
+      }
+      const P=centerline[bestI];
+      // 切线方向
+      const T=centerline[bestI+1]; const ang=Math.atan2(T.y-P.y,T.x-P.x);
+      const n = ang + Math.PI/2; // 法线方向
+      const Lpix=90; // 线长
+      sfLine = { a:{x:P.x+Lpix*Math.cos(n), y:P.y+Lpix*Math.sin(n)}, b:{x:P.x-Lpix*Math.cos(n), y:P.y-Lpix*Math.sin(n)} };
+      draw();
+    }
+
+    // 交互：拖拽 SF 端点
+    let dragging=false; let dragKey=null;
+    cvs.onmousedown = (e)=>{
+      if(!sfLine) return;
+      const rect=cvs.getBoundingClientRect(); const x=(e.clientX-rect.left)* (cvs.width/rect.width); const y=(e.clientY-rect.top)* (cvs.height/rect.height);
+      for(const k of ['a','b']){ const p=sfLine[k]; if(Math.abs(x-p.x)<=12 && Math.abs(y-p.y)<=12){ dragging=true; dragKey=k; return; } }
+    };
+    cvs.onmousemove = (e)=>{
+      if(!dragging||!sfLine) return; const rect=cvs.getBoundingClientRect(); const x=(e.clientX-rect.left)*(cvs.width/rect.width); const y=(e.clientY-rect.top)*(cvs.height/rect.height);
+      sfLine[dragKey]={x,y}; draw();
+    };
+    cvs.onmouseup = ()=>{dragging=false;};
+    cvs.onmouseleave = ()=>{dragging=false;};
+
+    // 按钮绑定
+     document.getElementById('btnRecord').onclick=()=>{ simulateLap(); };
+     document.getElementById('btnAuto').onclick=()=>{ autoBuild(); };
+     document.getElementById('btnClear').onclick=()=>{ recPts=[]; centerline=[]; sfLine=null; draw(); };
+     document.getElementById('btnSave').onclick=()=>{
+       if(!sfLine||centerline.length<5){ alert('请先自动建赛道'); return; }
+       const ref={lat:35.000000, lon:135.000000};
+       // 将像素坐标映射成“米”为单位的局部坐标（仅示例：像素→米比例）
+       const px2m = 0.8; // 假设 1px≈0.8m（演示用途）
+       const center = centerline.map(p=>({x:+( (p.x-cvs.width/2)*px2m ).toFixed(2), y:+( (p.y-cvs.height/2)*px2m ).toFixed(2)}));
+       const sf=[ {x:+((sfLine.a.x-cvs.width/2)*px2m).toFixed(2), y:+((sfLine.a.y-cvs.height/2)*px2m).toFixed(2)}, {x:+((sfLine.b.x-cvs.width/2)*px2m).toFixed(2), y:+((sfLine.b.y-cvs.height/2)*px2m).toFixed(2)} ];
+       const obj={ name:'My Track', ref, center, sf, sectors:[] };
+       document.getElementById('trackJson').value = JSON.stringify(obj, null, 2);
+     };
+
+    // 初始绘制
+     draw();
+
+    // 顶部状态芯片（模拟）
+    let tChip=0; setInterval(()=>{ tChip+=1; document.getElementById('chipHz').textContent = running? (Math.round((1+Math.abs(Math.sin(tChip/3)))*2)) : 0; document.getElementById('chipSats').textContent = 10 + Math.floor(Math.random()*3); document.getElementById('chipAcc').textContent = (3+Math.random()*4).toFixed(1); }, 1000);
+</script>
+</body>
+</html>

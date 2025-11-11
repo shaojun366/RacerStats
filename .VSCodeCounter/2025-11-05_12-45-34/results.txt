@@ -1,0 +1,95 @@
+Date : 2025-11-05 12:45:34
+Directory : d:\RacerStats
+Total : 49 files,  2175 codes, 102 comments, 275 blanks, all 2552 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| XML        |         44 |      1,551 |         47 |        158 |      1,756 |
+| HTML       |          1 |        339 |          3 |         39 |        381 |
+| Markdown   |          1 |        233 |          0 |         55 |        288 |
+| Batch      |          1 |         41 |         32 |         22 |         95 |
+| Properties |          2 |         11 |         20 |          1 |         32 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                               | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                  |         49 |      2,175 |        102 |        275 |      2,552 |
+| . (Files)                                                          |          3 |        384 |         54 |         61 |        499 |
+| .idea                                                              |          7 |         92 |          0 |          0 |         92 |
+| app                                                                |         37 |      1,459 |         47 |        158 |      1,664 |
+| app\src                                                            |         37 |      1,459 |         47 |        158 |      1,664 |
+| app\src\main                                                       |         37 |      1,459 |         47 |        158 |      1,664 |
+| app\src\main (Files)                                               |          1 |         31 |          3 |          6 |         40 |
+| app\src\main\res                                                   |         36 |      1,428 |         44 |        152 |      1,624 |
+| app\src\main\res\drawable                                          |         14 |        338 |          2 |          2 |        342 |
+| app\src\main\res\layout                                            |          9 |        870 |         15 |        131 |      1,016 |
+| app\src\main\res\menu                                              |          4 |         46 |          0 |          0 |         46 |
+| app\src\main\res\mipmap-anydpi                                     |          2 |         12 |          0 |          0 |         12 |
+| app\src\main\res\navigation                                        |          1 |         76 |          0 |         12 |         88 |
+| app\src\main\res\values                                            |          3 |         64 |         10 |          7 |         81 |
+| app\src\main\res\values-night                                      |          1 |          4 |          3 |          0 |          7 |
+| app\src\main\res\xml                                               |          2 |         18 |         14 |          0 |         32 |
+| docs                                                               |          1 |        233 |          0 |         55 |        288 |
+| gradle                                                             |          1 |          7 |          1 |          1 |          9 |
+| gradle\wrapper                                                     |          1 |          7 |          1 |          1 |          9 |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                           | language   | code       | comment    | blank      | total      |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| d:\RacerStats\.idea\AndroidProjectSystem.xml                       | XML        |          6 |          0 |          0 |          6 |
+| d:\RacerStats\.idea\compiler.xml                                   | XML        |          6 |          0 |          0 |          6 |
+| d:\RacerStats\.idea\deploymentTargetSelector.xml                   | XML        |         18 |          0 |          0 |         18 |
+| d:\RacerStats\.idea\gradle.xml                                     | XML        |         19 |          0 |          0 |         19 |
+| d:\RacerStats\.idea\migrations.xml                                 | XML        |         10 |          0 |          0 |         10 |
+| d:\RacerStats\.idea\misc.xml                                       | XML        |         16 |          0 |          0 |         16 |
+| d:\RacerStats\.idea\runConfigurations.xml                          | XML        |         17 |          0 |          0 |         17 |
+| d:\RacerStats\app\src\main\AndroidManifest.xml                     | XML        |         31 |          3 |          6 |         40 |
+| d:\RacerStats\app\src\main\res\drawable\ic_add.xml                 | XML        |         11 |          0 |          0 |         11 |
+| d:\RacerStats\app\src\main\res\drawable\ic_check.xml               | XML        |         11 |          0 |          0 |         11 |
+| d:\RacerStats\app\src\main\res\drawable\ic_close.xml               | XML        |         11 |          0 |          0 |         11 |
+| d:\RacerStats\app\src\main\res\drawable\ic_edit.xml                | XML        |         11 |          0 |          0 |         11 |
+| d:\RacerStats\app\src\main\res\drawable\ic_file.xml                | XML        |         11 |          0 |          0 |         11 |
+| d:\RacerStats\app\src\main\res\drawable\ic_info.xml                | XML        |         11 |          0 |          0 |         11 |
+| d:\RacerStats\app\src\main\res\drawable\ic_launcher_background.xml | XML        |        170 |          0 |          1 |        171 |
+| d:\RacerStats\app\src\main\res\drawable\ic_launcher_foreground.xml | XML        |         30 |          0 |          0 |         30 |
+| d:\RacerStats\app\src\main\res\drawable\ic_live.xml                | XML        |         10 |          0 |          0 |         10 |
+| d:\RacerStats\app\src\main\res\drawable\ic_more_vert.xml           | XML        |         11 |          0 |          0 |         11 |
+| d:\RacerStats\app\src\main\res\drawable\ic_review.xml              | XML        |         10 |          0 |          0 |         10 |
+| d:\RacerStats\app\src\main\res\drawable\ic_save.xml                | XML        |         11 |          0 |          0 |         11 |
+| d:\RacerStats\app\src\main\res\drawable\ic_track.xml               | XML        |         10 |          0 |          0 |         10 |
+| d:\RacerStats\app\src\main\res\drawable\speed_progress_bar.xml     | XML        |         20 |          2 |          1 |         23 |
+| d:\RacerStats\app\src\main\res\layout\activity_main.xml            | XML        |        247 |         10 |         35 |        292 |
+| d:\RacerStats\app\src\main\res\layout\fragment_live.xml            | XML        |        147 |          5 |         21 |        173 |
+| d:\RacerStats\app\src\main\res\layout\fragment_review.xml          | XML        |         27 |          0 |          3 |         30 |
+| d:\RacerStats\app\src\main\res\layout\fragment_track.xml           | XML        |        102 |          0 |         16 |        118 |
+| d:\RacerStats\app\src\main\res\layout\fragment_track_detail.xml    | XML        |         89 |          0 |         16 |        105 |
+| d:\RacerStats\app\src\main\res\layout\fragment_track_edit.xml      | XML        |        113 |          0 |         19 |        132 |
+| d:\RacerStats\app\src\main\res\layout\fragment_track_list.xml      | XML        |         56 |          0 |          9 |         65 |
+| d:\RacerStats\app\src\main\res\layout\item_lap.xml                 | XML        |         32 |          0 |          5 |         37 |
+| d:\RacerStats\app\src\main\res\layout\item_track.xml               | XML        |         57 |          0 |          7 |         64 |
+| d:\RacerStats\app\src\main\res\menu\bottom_nav_menu.xml            | XML        |         15 |          0 |          0 |         15 |
+| d:\RacerStats\app\src\main\res\menu\track_detail_menu.xml          | XML        |         13 |          0 |          0 |         13 |
+| d:\RacerStats\app\src\main\res\menu\track_edit_menu.xml            | XML        |          9 |          0 |          0 |          9 |
+| d:\RacerStats\app\src\main\res\menu\track_item_menu.xml            | XML        |          9 |          0 |          0 |          9 |
+| d:\RacerStats\app\src\main\res\mipmap-anydpi\ic_launcher.xml       | XML        |          6 |          0 |          0 |          6 |
+| d:\RacerStats\app\src\main\res\mipmap-anydpi\ic_launcher_round.xml | XML        |          6 |          0 |          0 |          6 |
+| d:\RacerStats\app\src\main\res\navigation\nav_graph.xml            | XML        |         76 |          0 |         12 |         88 |
+| d:\RacerStats\app\src\main\res\values-night\themes.xml             | XML        |          4 |          3 |          0 |          7 |
+| d:\RacerStats\app\src\main\res\values\colors.xml                   | XML        |         14 |          2 |          1 |         17 |
+| d:\RacerStats\app\src\main\res\values\strings.xml                  | XML        |         45 |          5 |          5 |         55 |
+| d:\RacerStats\app\src\main\res\values\themes.xml                   | XML        |          5 |          3 |          1 |          9 |
+| d:\RacerStats\app\src\main\res\xml\backup_rules.xml                | XML        |          9 |          4 |          0 |         13 |
+| d:\RacerStats\app\src\main\res\xml\data_extraction_rules.xml       | XML        |          9 |         10 |          0 |         19 |
+| d:\RacerStats\demo.html                                            | HTML       |        339 |          3 |         39 |        381 |
+| d:\RacerStats\docs\开发日志.md                                         | Markdown   |        233 |          0 |         55 |        288 |
+| d:\RacerStats\gradle.properties                                    | Properties |          4 |         19 |          0 |         23 |
+| d:\RacerStats\gradle\wrapper\gradle-wrapper.properties             | Properties |          7 |          1 |          1 |          9 |
+| d:\RacerStats\gradlew.bat                                          | Batch      |         41 |         32 |         22 |         95 |
+| Total                                                              |            |      2,175 |        102 |        275 |      2,552 |
++--------------------------------------------------------------------+------------+------------+------------+------------+------------+

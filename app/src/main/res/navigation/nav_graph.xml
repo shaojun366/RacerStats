@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/trackListFragment">
+
+    <fragment
+        android:id="@+id/trackListFragment"
+        android:name="com.example.racerstats.track.ui.TrackListFragment"
+        android:label="@string/track_title"
+        tools:layout="@layout/fragment_track_list">
+        
+        <action
+            android:id="@+id/action_trackList_to_trackRecording"
+            app:destination="@id/trackRecordingFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+            
+        <action
+            android:id="@+id/action_trackList_to_trackDetail"
+            app:destination="@id/trackDetailFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim">
+            <argument
+                android:name="trackId"
+                app:argType="string" />
+        </action>
+        
+        <action
+            android:id="@+id/action_trackList_to_trackEdit"
+            app:destination="@id/trackEditFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim">
+            <argument
+                android:name="trackId"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/trackRecordingFragment"
+        android:name="com.example.racerstats.track.ui.TrackRecordingFragment"
+        android:label="@string/recording"
+        tools:layout="@layout/fragment_track">
+        
+        <action
+            android:id="@+id/action_trackRecording_to_trackList"
+            app:destination="@id/trackListFragment"
+            app:popUpTo="@id/trackListFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/trackDetailFragment"
+        android:name="com.example.racerstats.track.ui.TrackDetailFragment"
+        tools:layout="@layout/fragment_track_detail">
+        
+        <argument
+            android:name="trackId"
+            app:argType="string" />
+            
+        <action
+            android:id="@+id/action_trackDetail_to_trackEdit"
+            app:destination="@id/trackEditFragment">
+            <argument
+                android:name="trackId"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/trackEditFragment"
+        android:name="com.example.racerstats.track.ui.TrackEditFragment"
+        tools:layout="@layout/fragment_track_edit">
+        
+        <argument
+            android:name="trackId"
+            app:argType="string" />
+    </fragment>
+
+</navigation>

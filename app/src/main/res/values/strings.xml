@@ -1,0 +1,56 @@
+<resources>
+    <string name="app_name">RacerStats</string>
+    
+    <!-- Common -->
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="close">Close</string>
+    <string name="google_maps_key">AIzaSyADZHEYfh57rLL3-ZsUKxNsqBFoqaRjprA</string>
+    
+    <!-- Track List -->
+    <string name="track_title">Tracks</string>
+    <string name="track_length_format">Length: %.3f km</string>
+    <string name="last_used_format">Last used: %s</string>
+    <string name="more_options">More options</string>
+    <string name="no_tracks">No tracks yet</string>
+    <string name="add_track">Add Track</string>
+    
+    <!-- Track Recording -->
+    <string name="recording">Recording</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="finish">Finish</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="set_line">Set Line</string>
+    <string name="setting_start_line">Setting Start Line</string>
+    <string name="setting_finish_line">Setting Finish Line</string>
+    <string name="tap_to_set_start_line">Tap on the map to set start line (2 points needed)</string>
+    <string name="tap_to_set_finish_line">Tap on the map to set finish line (2 points needed)</string>
+    
+    <!-- Track Detail -->
+    <string name="track_name">Track Name</string>
+    <string name="best_lap_format">Best Lap: %s</string>
+    <string name="start_session">Start Session</string>
+    <string name="delete_track_confirmation">Are you sure you want to delete this track?</string>
+    <string name="track_info">Track Information</string>
+    <string name="track_file_format">Track File: %s</string>
+    <string name="track_created_format">Created: %s</string>
+    <string name="track_modified_format">Modified: %s</string>
+    
+    <!-- Track Edit -->
+    <string name="edit_track">Edit Track</string>
+    <string name="new_track">New Track</string>
+    <string name="start_line">Start Line</string>
+    <string name="finish_line">Finish Line</string>
+    <string name="separate_finish_line">Use separate finish line</string>
+    <string name="set_start_line">Set Start Line</string>
+    <string name="set_finish_line">Set Finish Line</string>
+    <string name="track_saved">Track saved successfully</string>
+    <string name="error_track_name_empty">Track name cannot be empty</string>
+    <string name="error_start_line_not_set">Please set the start line</string>
+    <string name="error_finish_line_not_set">Please set the finish line</string>
+    <string name="error_saving_track">Error saving track: %s</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主题颜色 -->
+    <color name="background">#0B0F14</color>
+    <color name="card">#121823</color>
+    <color name="muted">#7B8794</color>
+    <color name="text">#E8ECEF</color>
+    <color name="accent">#00B2FF</color>
+    <color name="good">#22C55E</color>
+    <color name="bad">#FF4D4F</color>
+    <color name="chip">#0F1622</color>
+    <color name="line">#1E2735</color>
+    
+    <!-- 系统要求的基础颜色 -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
