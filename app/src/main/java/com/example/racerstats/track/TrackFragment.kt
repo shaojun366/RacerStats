@@ -76,20 +76,46 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        // 调试：确保按钮容器可见
+        binding.actionsContainer.visibility = View.VISIBLE
+        binding.statsContainer.visibility = View.VISIBLE
+        
+        // 调试：添加日志
+        android.util.Log.d("TrackFragment", "onViewCreated: Setting up UI")
+        
+        // 临时禁用地图，直接测试按钮功能
+        android.util.Log.d("TrackFragment", "Map temporarily disabled for testing")
+        binding.btnStartFinish.text = "Start Recording (No Map)"
+        
+        // 原地图代码（暂时注释）
+        /*
+        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+        if (mapFragment == null) {
+            android.util.Log.e("TrackFragment", "MapFragment is null!")
+            // 如果地图加载失败，至少显示按钮
+            binding.btnStartFinish.text = "Map Error - Click to Start"
+        } else {
+            mapFragment.getMapAsync(this)
+        }
+        */
         
         setupUI()
         observeViewModel()
     }
     
     private fun setupUI() {
+        // 调试：确保按钮点击事件正常工作
+        android.util.Log.d("TrackFragment", "setupUI: Configuring button listeners")
+        
         binding.btnStartFinish.setOnClickListener {
+            android.util.Log.d("TrackFragment", "Start/Finish button clicked")
             when (viewModel.recordingState.value) {
                 is TrackRecorder.RecordingState.Idle -> {
                     if (checkLocationPermissions()) {
+                        android.util.Log.d("TrackFragment", "Starting recording")
                         viewModel.startRecording()
                     } else {
+                        android.util.Log.d("TrackFragment", "Requesting location permissions")
                         requestLocationPermissions()
                     }
                 }
