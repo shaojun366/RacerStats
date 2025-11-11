@@ -11,32 +11,38 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
+        android:layout_marginBottom="80dp"
         android:gravity="center"
-        android:background="@color/background"
+        android:background="@color/card"
+        android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <Button
             android:id="@+id/btnStartFinish"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/start_recording"/>
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="START"
+            android:textColor="@color/text"
+            android:backgroundTint="@color/accent"/>
 
         <Button
             android:id="@+id/btnPause"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/pause"
+            android:layout_width="100dp"
+            android:layout_height="48dp"
+            android:text="PAUSE"
+            android:textColor="@color/text"
+            android:backgroundTint="@color/good"
             android:layout_marginStart="16dp"/>
 
         <Button
             android:id="@+id/btnSetLine"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/set_line"
+            android:layout_width="100dp"
+            android:layout_height="48dp"
+            android:text="SET LINE"
+            android:textColor="@color/text"
+            android:backgroundTint="@color/bad"
             android:layout_marginStart="16dp"/>
     </LinearLayout>
 
@@ -45,54 +51,67 @@
         android:id="@+id/statsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:padding="16dp"
         android:background="@color/card"
         app:layout_constraintBottom_toTopOf="@+id/actionsContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/tvDistance"
-            android:layout_width="wrap_content"
+        <!-- 左侧：统计信息 -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="0.0 km"
-            android:textColor="@color/text"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvPointCount"
+            <TextView
+                android:id="@+id/tvDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.0 km"
+                android:textColor="@color/text"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+
+            <TextView
+                android:id="@+id/tvPointCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 points"
+                android:textColor="@color/text"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+        </LinearLayout>
+
+        <!-- 右侧：宽容度设置 -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0 points"
-            android:textColor="@color/text"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginStart="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Track Tolerance"
+                android:textColor="@color/muted"
+                android:textSize="12sp"/>
+
+            <Button
+                android:id="@+id/btnTolerance"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Street (40m)"
+                android:textColor="@color/accent"
+                android:textSize="12sp"
+                android:minWidth="0dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"/>
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- 地图区域 - 临时用 View 替代测试 -->
-    <View
-        android:id="@+id/mapPlaceholder"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@color/chip"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/statsContainer"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-        
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Track Recording Area\n(Map will be here)"
-        android:textColor="@color/text"
-        android:textAlignment="center"
-        android:gravity="center"
-        app:layout_constraintTop_toTopOf="@+id/mapPlaceholder"
-        app:layout_constraintBottom_toBottomOf="@+id/mapPlaceholder"
-        app:layout_constraintStart_toStartOf="@+id/mapPlaceholder"
-        app:layout_constraintEnd_toEndOf="@+id/mapPlaceholder"/>
-
-    <!-- 真正的地图 Fragment（暂时注释）
+    <!-- Google Maps 地图区域 -->
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -102,6 +121,5 @@
         app:layout_constraintBottom_toTopOf="@+id/statsContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-    -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

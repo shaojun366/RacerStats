@@ -12,14 +12,26 @@ import javax.inject.Singleton
 class TrackMatcher @Inject constructor() {
     companion object {
         private const val TAG = "TrackMatcher"
-        private const val MATCH_DISTANCE_THRESHOLD = 50.0  // 50米
+        
+        // 不同场景的距离阈值配置
+        const val THRESHOLD_PRECISION_TRACK = 25.0   // 精确赛道：25米
+        const val THRESHOLD_STREET_CIRCUIT = 40.0    // 街道赛道：40米  
+        const val THRESHOLD_GENERAL_ROAD = 50.0      // 一般道路：50米
+        const val THRESHOLD_HIGHWAY = 80.0           // 高速公路：80米
+        
+        private const val DEFAULT_DISTANCE_THRESHOLD = THRESHOLD_STREET_CIRCUIT
         private const val MIN_POINTS_REQUIRED = 10
     }
     
     /**
      * 计算两条轨迹的相似度 (0-1)
+     * @param distanceThreshold 距离阈值，默认使用街道赛道标准
      */
-    fun calculateSimilarity(track1Points: List<GpsPoint>, track2Points: List<GpsPoint>): Double {
+    fun calculateSimilarity(
+        track1Points: List<GpsPoint>, 
+        track2Points: List<GpsPoint>,
+        distanceThreshold: Double = DEFAULT_DISTANCE_THRESHOLD
+    ): Double {
         if (track1Points.size < MIN_POINTS_REQUIRED || track2Points.size < MIN_POINTS_REQUIRED) {
             return 0.0
         }
@@ -29,7 +41,7 @@ class TrackMatcher @Inject constructor() {
             val hausdorffDistance = calculateHausdorffDistance(track1Points, track2Points)
             
             // 将距离转换为相似度得分 (0-1)
-            val similarity = 1.0 / (1.0 + hausdorffDistance / MATCH_DISTANCE_THRESHOLD)
+            val similarity = 1.0 / (1.0 + hausdorffDistance / distanceThreshold)
             return similarity.coerceIn(0.0, 1.0)
         } catch (e: Exception) {
             Log.e(TAG, "Error calculating similarity: ${e.message}", e)

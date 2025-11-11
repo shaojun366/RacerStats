@@ -63,6 +63,10 @@ class TrackViewModel @Inject constructor(
     
     val recordingState = trackRecorder.recordingState
     
+    // 宽容度管理
+    private val _currentTolerance = MutableStateFlow(TrackMatcher.THRESHOLD_STREET_CIRCUIT)
+    val currentTolerance = _currentTolerance.asStateFlow()
+    
     init {
         // 观察定位更新
         viewModelScope.launch {
@@ -394,6 +398,14 @@ class TrackViewModel @Inject constructor(
     }
 
     private enum class EditingLine { START, FINISH }
+    
+    fun getCurrentTolerance(): Double {
+        return _currentTolerance.value
+    }
+    
+    fun setTolerance(tolerance: Double) {
+        _currentTolerance.value = tolerance
+    }
 }
 
 data class LinePreviewState(
