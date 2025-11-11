@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.graphics.Color
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -49,6 +50,20 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     private var finishLinePreviewMarker: Marker? = null
     private var finishLinePolyline: Polyline? = null
     
+    // 权限请求
+    private val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        
+        if (fineLocationGranted && coarseLocationGranted) {
+            setupMapLocation()
+        } else {
+            showSnackbar("Location permission is required for track recording")
+        }
+    }
+    
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -71,7 +86,13 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     private fun setupUI() {
         binding.btnStartFinish.setOnClickListener {
             when (viewModel.recordingState.value) {
-                is TrackRecorder.RecordingState.Idle -> viewModel.startRecording()
+                is TrackRecorder.RecordingState.Idle -> {
+                    if (checkLocationPermissions()) {
+                        viewModel.startRecording()
+                    } else {
+                        requestLocationPermissions()
+                    }
+                }
                 is TrackRecorder.RecordingState.Recording -> showSaveTrackDialog()
                 is TrackRecorder.RecordingState.Paused -> showSaveTrackDialog()
             }
@@ -88,6 +109,26 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
         binding.btnSetLine.setOnClickListener {
             viewModel.toggleLineSettingMode()
         }
+    }
+    
+    private fun checkLocationPermissions(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED &&
+        ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    private fun requestLocationPermissions() {
+        locationPermissionRequest.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
     }
     
     private fun observeViewModel() {
@@ -276,14 +317,7 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            map?.isMyLocationEnabled = true
-        }
+        setupMapLocation()
         
         map?.uiSettings?.apply {
             isMyLocationButtonEnabled = true
@@ -294,6 +328,25 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
         map?.setOnMapClickListener { latLng ->
             viewModel.handleMapClick(GpsPoint(latLng.latitude, latLng.longitude))
         }
+        
+        // 设置默认位置（如果有最后已知位置的话）
+        setDefaultMapLocation()
+    }
+    
+    private fun setupMapLocation() {
+        if (checkLocationPermissions()) {
+            try {
+                map?.isMyLocationEnabled = true
+            } catch (e: SecurityException) {
+                showSnackbar("Unable to enable location on map")
+            }
+        }
+    }
+    
+    private fun setDefaultMapLocation() {
+        // 设置默认位置到一个合理的位置，比如北京
+        val defaultLocation = LatLng(39.9042, 116.4074)
+        map?.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 15f))
     }
     
     private fun showSaveTrackDialog() {
