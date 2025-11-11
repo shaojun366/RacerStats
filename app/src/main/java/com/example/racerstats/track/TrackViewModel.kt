@@ -77,8 +77,17 @@ class TrackViewModel @Inject constructor(
     
     fun startRecording() {
         viewModelScope.launch {
-            trackRecorder.startRecording()
-            locationManager.startUpdates()
+            try {
+                trackRecorder.startRecording()
+                locationManager.startUpdates()
+            } catch (e: Exception) {
+                _events.emit(
+                    TrackEditEvent.ShowError(
+                        R.string.error_saving_track,
+                        arrayOf("Failed to start GPS: ${e.message}")
+                    )
+                )
+            }
         }
     }
     
