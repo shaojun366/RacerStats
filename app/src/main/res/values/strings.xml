@@ -8,7 +8,7 @@
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
     <string name="close">Close</string>
-    <string name="google_maps_key">AIzaSyADZHEYfh57rLL3-ZsUKxNsqBFoqaRjprA</string>
+    <string name="google_maps_key">YOUR_API_KEY_HERE</string>
     
     <!-- Track List -->
     <string name="track_title">Tracks</string>
