@@ -22,12 +22,6 @@
 - **轨迹匹配算法**: 智能识别相似路线和圈速计算
 - **多场景适配**: 支持专业赛道、街道、公路等不同环境
 
-### ⚙️ **宽容度调节**
-- **精密赛道模式** (25m): 适用于 F1 赛道、专业卡丁车场
-- **街道赛道模式** (40m): 城市街道赛道、临时封闭路段
-- **一般道路模式** (50m): 乡村公路、山路驾驶
-- **高速公路模式** (80m): 高速公路、宽阔直道场景
-
 ### 📊 **数据分析**
 - **历史圈速记录**: 完整的圈速数据存储和回顾
 - **性能趋势分析**: 圈速改进轨迹可视化
@@ -88,7 +82,6 @@ cd RacerStats
 
 | 实时计时界面 | 赛道录制界面 | 数据分析界面 |
 |-------------|-------------|-------------|
-| ![Live](docs/screenshots/live.png) | ![Track](docs/screenshots/track.png) | ![Review](docs/screenshots/review.png) |
 
 ## 📖 使用指南
 
@@ -128,68 +121,9 @@ app/src/main/
 └── AndroidManifest.xml   # 应用配置
 ```
 
-### **核心算法**
-- **轨迹匹配**: Douglas-Peucker 简化 + Hausdorff 距离
-- **圈速计算**: 基于起终点线的精确计时
-- **Delta 算法**: 实时位置与最佳圈对比
-- **速度平滑**: 0.7/0.3 权重滤波，消除 GPS 抖动
 
-### **数据模型**
-```kotlin
-// 核心数据结构
-data class LapData(val lapTime: Long, val timestamp: Long)
-data class GpsPoint(val latitude: Double, val longitude: Double)
-data class TrackDetails(val track: Track, val points: List<GpsPoint>)
-```
 
-## 📋 版本历程
 
-### **v1.0.1** (2025-11-12) 🎉
-- ✨ **新增**: 赛道宽容度调节功能
-- 🎨 **优化**: 录制界面 UI 布局
-- 📚 **完善**: 功能文档和使用说明
-- 🔧 **改进**: StateFlow 状态管理
-
-### **v1.0.0** (2025-11-07)
-- 🎉 **发布**: 首个稳定版本
-- 🏁 **实现**: 核心计时功能
-- 🗺️ **支持**: 基础赛道录制
-- 📊 **提供**: HUD 实时显示
-
-## 🤝 贡献指南
-
-欢迎提交 Issue 和 Pull Request！
-
-### **开发流程**
-1. Fork 项目到您的账户
-2. 创建功能分支: `git checkout -b feature/AmazingFeature`
-3. 提交更改: `git commit -m 'Add AmazingFeature'`
-4. 推送分支: `git push origin feature/AmazingFeature`
-5. 提交 Pull Request
-
-### **代码规范**
-- 遵循 Kotlin 官方代码风格
-- 使用有意义的变量和函数命名
-- 添加必要的注释和文档
-- 确保所有测试通过
-
-## 🐛 问题反馈
-
-遇到问题？请通过以下方式联系:
-- 📧 **提交 Issue**: [GitHub Issues](https://github.com/shaojun366/RacerStats/issues)
-- 💬 **功能建议**: 欢迎在 Issues 中提出新功能想法
-- 🔧 **Bug 报告**: 请提供详细的复现步骤
-
-## 📄 开源协议
-
-本项目基于 [MIT License](LICENSE) 开源协议
-
-## 🙏 致谢
-
-- **Google Maps**: 提供精确的地图服务支持
-- **Android Jetpack**: 现代化的 Android 开发组件
-- **Kotlin**: 简洁高效的编程语言
-- **Community**: 感谢所有贡献者和用户的支持
 
 ---
 
