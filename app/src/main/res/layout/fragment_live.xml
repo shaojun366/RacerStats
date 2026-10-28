@@ -8,6 +8,11 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/live_title" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/text" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnSelectTrack"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp"
+            android:text="@string/manual_track_selection" android:maxLines="1" android:ellipsize="end"
+            app:icon="@drawable/ic_track" app:cornerRadius="14dp" />
         <TextView android:id="@+id/tvGpsStatus" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="6dp" android:text="@string/gps_waiting" android:textColor="@color/muted" android:textSize="13sp" />
         <com.google.android.material.chip.ChipGroup android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -74,7 +79,7 @@
             </LinearLayout>
         </LinearLayout>
         <TextView android:id="@+id/tvLapCount" style="@style/TelemetryLabel" android:text="@string/lap_count_zero" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp"
+        <TextView android:id="@+id/tvTimingHelp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp"
             android:text="@string/timing_help"
             android:textSize="12sp" android:textColor="@color/muted" android:lineSpacingExtra="4dp" />
     </LinearLayout>

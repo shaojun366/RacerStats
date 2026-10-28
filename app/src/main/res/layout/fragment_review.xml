@@ -4,6 +4,10 @@
         android:textColor="@color/text" android:textStyle="bold" android:textSize="28sp" />
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/review_subtitle"
         android:layout_marginTop="6dp" android:textSize="13sp" android:textColor="@color/muted" />
+    <com.google.android.material.button.MaterialButton xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/btnFilterTrack" style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp"
+        android:text="@string/filter_all_tracks" android:maxLines="1" android:ellipsize="end" app:cornerRadius="14dp" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal"
         android:background="@drawable/telemetry_card" android:padding="20dp" android:layout_marginTop="24dp">
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
@@ -11,7 +15,7 @@
             <TextView android:id="@+id/tvTotalLaps" style="@style/TelemetryValue" android:text="@string/zero" />
         </LinearLayout>
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:orientation="vertical">
-            <TextView style="@style/TelemetryLabel" android:text="@string/history_best_label" />
+            <TextView android:id="@+id/tvHistoryBestLabel" style="@style/TelemetryLabel" android:text="@string/best_select_track" />
             <TextView android:id="@+id/tvHistoryBest" style="@style/TelemetryValue" android:text="@string/lap_time_placeholder" android:textColor="@color/accent" />
         </LinearLayout>
     </LinearLayout>

@@ -81,4 +81,25 @@
     <string name="track_points_zero">0 个轨迹点</string>
     <string name="tolerance_label">匹配容差</string>
     <string name="tolerance_default">街道 (40m)</string>
+    <string name="choose_timing_track">选择计时方式与赛道</string>
+    <string name="manual_timing_option">手动计时 · 不关联赛道</string>
+    <string name="manual_track_selection">手动计时 · 点击选择赛道</string>
+    <string name="selected_auto_track">自动计时 · %s</string>
+    <string name="loading_track">正在加载赛道…</string>
+    <string name="manage_tracks">前往赛道管理</string>
+    <string name="arm_auto_timing">启用自动计时</string>
+    <string name="waiting_start_line">已启用 · 等待通过起点</string>
+    <string name="auto_paused">已暂停 · 继续后重新通过起点</string>
+    <string name="automatic_crossing">自动过线</string>
+    <string name="auto_timing_help">首次通过起点后开始计时。闭合赛道连续记圈，独立终点按次计时；暂停或 GPS 质量不足会放弃当前未完成圈，重新通过起点后继续。</string>
+    <string name="filter_all_tracks">全部记录 · 点击筛选赛道</string>
+    <string name="filter_manual">手动记录</string>
+    <string name="filter_track_title">按赛道筛选记录</string>
+    <string name="best_select_track">选择赛道查看最佳</string>
+    <string name="best_track_label">当前赛道最佳</string>
+    <string name="best_manual_label">手动记录最短时间</string>
+    <string name="track_history_empty">此筛选条件下还没有圈速记录</string>
+    <string name="automatic_lap_label">%s · 自动</string>
+    <string name="manual_lap_label">未关联赛道 · 手动</string>
+    <string name="gps_accuracy_insufficient">GPS 精度不足 · 本圈不会记录</string>
 </resources>

@@ -67,14 +67,16 @@ class LapManager {
         return delta to predicted
     }
 
-    fun completeLap(endTime: Long) {
+    fun completeLap(endTime: Long, finishPoint: CheckpointData? = null) {
         val lap = currentLap ?: return
         lap.duration = (endTime - lap.startTime).coerceAtLeast(0L)
         lap.endTime = endTime
-        lastPoint?.let { point ->
-            if (point.distance > (lap.checkpoints.lastOrNull()?.distance ?: 0f)) {
-                lap.checkpoints.add(point.copy(timestamp = endTime))
-            }
+        val endpoint = finishPoint ?: lastPoint?.takeIf { it.timestamp <= endTime }
+        // Hysteresis may confirm a crossing after samples already beyond the line.
+        lap.checkpoints.removeAll { it.timestamp > endTime || (endpoint != null && it.distance > endpoint.distance) }
+        endpoint?.takeIf { it.distance.isFinite() && it.distance > 0 }?.let { point ->
+            if (lap.checkpoints.lastOrNull()?.distance == point.distance) lap.checkpoints.removeAt(lap.checkpoints.lastIndex)
+            lap.checkpoints.add(point.copy(timestamp = endTime))
         }
         if (lap.duration > 0 && lap.checkpoints.isNotEmpty() &&
             (bestLap == null || lap.duration < bestLap!!.duration)) {

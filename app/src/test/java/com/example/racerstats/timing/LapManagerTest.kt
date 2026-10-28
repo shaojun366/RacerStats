@@ -5,6 +5,17 @@ import org.junit.Test
 
 class LapManagerTest {
     private val manager = LapManager()
+
+    @Test fun aConfirmedCrossingTrimsSamplesBeyondTheActualFinish() {
+        manager.startNewLap(0)
+        point(1_000, 10f)
+        point(11_000, 110f)
+        manager.completeLap(10_000, CheckpointData(10_000, 100f, 10f, 0.0, 0.0))
+        manager.startNewLap(10_000)
+        val result = point(20_000, 100f)!!
+        assertEquals(0.0, result.first, 0.001)
+        assertEquals(10_000L, result.second)
+    }
     private fun point(time: Long, distance: Float, speed: Float = 10f) =
         manager.updateCurrentLap(time, distance, speed, 0.0, 0.0)
 

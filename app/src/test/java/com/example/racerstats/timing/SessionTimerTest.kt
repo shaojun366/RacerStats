@@ -7,6 +7,16 @@ class SessionTimerTest {
     private var clock = 100L
     private val timer = SessionTimer { clock }
 
+    @Test fun interpolatedStartTimeIsIncludedAndResetDiscardsThePartialLap() {
+        clock = 1_000
+        timer.start(750)
+        assertEquals(250L, timer.lapElapsed)
+        timer.reset()
+        assertEquals(0L, timer.lapElapsed)
+        assertFalse(timer.isRunning)
+        assertFalse(timer.isPaused)
+    }
+
     @Test fun pausesAreExcludedFromBothSessionAndLapTime() {
         timer.start()
         clock += 1_000

@@ -14,10 +14,10 @@ class SessionTimer(private val now: () -> Long) {
     val elapsed: Long get() = accumulated + if (isRunning) (now() - startedAt).coerceAtLeast(0) else 0
     val lapElapsed: Long get() = (elapsed - lapOffset).coerceAtLeast(0)
 
-    fun start() {
+    fun start(timestamp: Long = now()) {
         accumulated = 0
         lapOffset = 0
-        startedAt = now()
+        startedAt = timestamp.coerceIn(0L, now())
         isRunning = true
         isPaused = false
     }
@@ -48,5 +48,11 @@ class SessionTimer(private val now: () -> Long) {
         if (isRunning) accumulated = elapsed
         isRunning = false
         isPaused = false
+    }
+
+    fun reset() {
+        stop()
+        accumulated = 0
+        lapOffset = 0
     }
 }
