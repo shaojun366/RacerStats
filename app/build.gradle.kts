@@ -6,9 +6,6 @@ plugins {
     alias(libs.plugins.navigation.safeargs)
 }
 
-// Enable Jetpack Compose
-android.buildFeatures.compose = true
-
 android {
     namespace = "com.example.racerstats"
     compileSdk = 34
@@ -19,6 +16,8 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders["MAPS_API_KEY"] = providers.gradleProperty("MAPS_API_KEY")
+            .orElse(providers.environmentVariable("MAPS_API_KEY")).getOrElse("")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -45,12 +44,7 @@ android {
     }
     
     buildFeatures {
-        dataBinding = true
         viewBinding = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     kapt {
@@ -68,7 +62,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.compose.runtime)
     
     // Navigation
     implementation(libs.androidx.navigation.fragment.ktx)
@@ -104,10 +97,6 @@ dependencies {
     implementation(libs.google.location)
     implementation(libs.google.maps)
     
-    // Design & UI
-    implementation(libs.androidx.material)
-    implementation(libs.androidx.design)
-    
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
@@ -116,4 +105,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation("androidx.test:core-ktx:1.5.0")
 }

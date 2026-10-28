@@ -8,6 +8,9 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager as AndroidLocationManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,11 +38,14 @@ class LocationManager @Inject constructor(
     
     // 用于计算实际采样率
     private val locationTimestamps = mutableListOf<Long>()
-    private var lastRateCalculation = 0L
+    private val handler = Handler(Looper.getMainLooper())
+    private var updatesRequested = false
+    private var scanCallback: ScanCallback? = null
+    private val scanTimeout = Runnable { stopScanning() }
 
     private val systemLocationManager = context.getSystemService(Context.LOCATION_SERVICE) as AndroidLocationManager
-    private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    private val bluetoothAdapter = bluetoothManager.adapter
+    private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+    private val bluetoothAdapter get() = bluetoothManager?.adapter
     
     private var dragyDevice: BluetoothDevice? = null
     private var dragyGatt: BluetoothGatt? = null
@@ -79,25 +85,11 @@ class LocationManager @Inject constructor(
                 null
             }
             
-            // 计算当前采样率
-            val currentTime = System.currentTimeMillis()
-            locationTimestamps.add(currentTime)
-            
-            // 移除超出时间窗口的时间戳
-            locationTimestamps.removeAll { it < currentTime - RATE_CALCULATION_WINDOW }
-            
-            // 计算采样率（每秒采样次数）
-            val updateRate = if (locationTimestamps.size > 1) {
-                locationTimestamps.size.toFloat() * (1000f / RATE_CALCULATION_WINDOW)
-            } else {
-                0f
-            }
-            
             _gnssData.postValue(GnssData(
                 satsInView = satsInView,
                 satsUsed = satsUsed,
                 accuracy = lastLocation?.accuracy ?: 0f,
-                updateRate = updateRate
+                updateRate = _gnssData.value?.updateRate ?: 0f
             ))
         }
     }
@@ -130,11 +122,15 @@ class LocationManager @Inject constructor(
     // Dragy Pro 蓝牙连接回调
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+            if (!updatesRequested) return
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     isDragyConnected = true
                     _connectionStatus.postValue(ConnectionStatus.CONNECTED_DRAGY)
-                    gatt?.discoverServices()
+                    try { gatt?.discoverServices() } catch (_: SecurityException) {
+                        isDragyConnected = false
+                        fallbackToPhoneGPS()
+                    }
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     isDragyConnected = false
@@ -149,7 +145,8 @@ class LocationManager @Inject constructor(
                 val service = gatt?.getService(UUID.fromString(DRAGY_SERVICE_UUID))
                 val characteristic = service?.getCharacteristic(UUID.fromString(DRAGY_DATA_CHAR_UUID))
                 if (characteristic != null) {
-                    gatt.setCharacteristicNotification(characteristic, true)
+                    try { gatt.setCharacteristicNotification(characteristic, true) }
+                    catch (_: SecurityException) { _connectionStatus.postValue(ConnectionStatus.ERROR) }
                 }
             }
         }
@@ -181,10 +178,10 @@ class LocationManager @Inject constructor(
     // 手机 GPS 位置监听器
     private val locationListener = LocationListener { location ->
         val rawData = LocationData(
-            timestamp = if (location.time != 0L) location.time else System.currentTimeMillis(),
+            timestamp = location.elapsedRealtimeNanos / 1_000_000,
             latitude = location.latitude,
             longitude = location.longitude,
-            speed = location.speed,
+            speed = if (location.hasSpeed()) location.speed else Float.NaN,
             accuracy = location.accuracy,
             altitude = location.altitude,
             bearing = location.bearing,
@@ -196,7 +193,13 @@ class LocationManager @Inject constructor(
     // 初始化并连接到 Dragy Pro
     @SuppressLint("MissingPermission")
     fun connectToDragy() {
-        _connectionStatus.value = ConnectionStatus.CONNECTING
+        // Optional receiver discovery must never prevent phone GPS from working.
+        val adapter = bluetoothAdapter ?: return
+        if (android.os.Build.VERSION.SDK_INT >= 31 &&
+            (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_SCAN) != android.content.pm.PackageManager.PERMISSION_GRANTED ||
+             androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED)) return
+        if (!adapter.isEnabled || scanCallback != null) return
+        val scanner = adapter.bluetoothLeScanner ?: return
         
         // 注册 GNSS 状态监听
         if (!isGnssCallbackRegistered) {
@@ -209,12 +212,11 @@ class LocationManager @Inject constructor(
         }
 
         // 扫描并连接 Dragy Pro
-        val scanner = bluetoothAdapter.bluetoothLeScanner
-        val scanCallback = object : ScanCallback() {
+        val callback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 result?.device?.let { device ->
                     if (device.name?.contains("Dragy", ignoreCase = true) == true) {
-                        scanner.stopScan(this)
+                        stopScanning()
                         dragyDevice = device
                         dragyGatt = dragyDevice?.connectGatt(context, false, gattCallback)
                     }
@@ -222,7 +224,7 @@ class LocationManager @Inject constructor(
             }
 
             override fun onScanFailed(errorCode: Int) {
-                _connectionStatus.postValue(ConnectionStatus.ERROR)
+                stopScanning()
             }
         }
 
@@ -230,11 +232,19 @@ class LocationManager @Inject constructor(
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .build()
 
-        scanner.startScan(null, scanSettings, scanCallback)
+        scanCallback = callback
+        try {
+            scanner.startScan(null, scanSettings, callback)
+            handler.postDelayed(scanTimeout, 10_000)
+        } catch (_: SecurityException) {
+            stopScanning()
+        }
     }
 
     @SuppressLint("MissingPermission")
     fun startUpdates() {
+        if (updatesRequested) return
+        updatesRequested = true
         if (!isGnssCallbackRegistered) {
             try {
                 systemLocationManager.registerGnssStatusCallback(gnssCallback)
@@ -262,7 +272,7 @@ class LocationManager @Inject constructor(
 
             // 解析数据包
             // 注意：这里的数据格式是示例，需要根据实际的 Dragy Pro 协议调整
-            val timestamp = System.currentTimeMillis() // 使用系统时间作为时间戳
+            val timestamp = SystemClock.elapsedRealtime()
             val latitude = buffer.getDouble()
             val longitude = buffer.getDouble()
             val speed = buffer.getFloat()
@@ -294,21 +304,37 @@ class LocationManager @Inject constructor(
     // 切换到手机 GPS
     @SuppressLint("MissingPermission")
     private fun fallbackToPhoneGPS() {
-        if (!isDragyConnected) {
+        if (updatesRequested && !isDragyConnected) {
+            try {
+            if (!systemLocationManager.isProviderEnabled(AndroidLocationManager.GPS_PROVIDER)) {
+                updatesRequested = false
+                _connectionStatus.postValue(ConnectionStatus.ERROR)
+                throw IllegalStateException("GPS is disabled")
+            }
             systemLocationManager.requestLocationUpdates(
                 AndroidLocationManager.GPS_PROVIDER,
                 MIN_UPDATE_INTERVAL,
                 MIN_DISTANCE,
-                locationListener
+                locationListener,
+                Looper.getMainLooper()
             )
             _connectionStatus.postValue(ConnectionStatus.CONNECTED_GPS)
+            } catch (e: SecurityException) {
+                updatesRequested = false
+                _connectionStatus.postValue(ConnectionStatus.ERROR)
+                throw e
+            }
         }
     }
 
     // 停止位置更新
     fun stopLocationUpdates() {
-        dragyGatt?.disconnect()
-        systemLocationManager.removeUpdates(locationListener)
+        updatesRequested = false
+        stopScanning()
+        try { dragyGatt?.disconnect(); dragyGatt?.close() } catch (_: SecurityException) { }
+        dragyGatt = null
+        isDragyConnected = false
+        runCatching { systemLocationManager.removeUpdates(locationListener) }
         try {
             if (isGnssCallbackRegistered) {
                 systemLocationManager.unregisterGnssStatusCallback(gnssCallback)
@@ -320,23 +346,43 @@ class LocationManager @Inject constructor(
         _connectionStatus.postValue(ConnectionStatus.DISCONNECTED)
         locationTimestamps.clear()
         lastLocationData = null
+        _gnssData.postValue(GnssData(0, 0, 0f, 0f))
     }
 
     // 释放资源
     fun release() {
         stopLocationUpdates()
-        dragyGatt?.close()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun stopScanning() {
+        handler.removeCallbacks(scanTimeout)
+        val callback = scanCallback ?: return
+        scanCallback = null
+        runCatching { bluetoothAdapter?.bluetoothLeScanner?.stopScan(callback) }
     }
 
     private fun emitLocationData(rawData: LocationData) {
+        if (!updatesRequested || !rawData.latitude.isFinite() || !rawData.longitude.isFinite() ||
+            rawData.latitude !in -90.0..90.0 || rawData.longitude !in -180.0..180.0 ||
+            !rawData.accuracy.isFinite() || rawData.accuracy < 0 ||
+            rawData.timestamp <= (lastLocationData?.timestamp ?: Long.MIN_VALUE)) return
         val enhanced = enhanceSpeed(rawData)
+        val now = SystemClock.elapsedRealtime()
+        locationTimestamps.add(now)
+        locationTimestamps.removeAll { it < now - 5_000 }
+        val duration = now - locationTimestamps.first()
+        val rate = if (duration > 0) (locationTimestamps.size - 1) * 1000f / duration else 0f
+        val gnss = _gnssData.value ?: GnssData(0, 0, 0f, 0f)
+        _gnssData.postValue(gnss.copy(accuracy = enhanced.accuracy, updateRate = rate))
         _locationData.postValue(enhanced)
         _locationUpdates.tryEmit(enhanced)
     }
 
     private fun enhanceSpeed(raw: LocationData): LocationData {
         val previous = lastLocationData
-        val adjustedSpeed = if (raw.speed <= 0f && previous != null) {
+        // A valid zero speed is authoritative; GPS drift must not make a parked car move.
+        val adjustedSpeed = if (!raw.speed.isFinite() && previous != null) {
             val timeDeltaSeconds = (raw.timestamp - previous.timestamp) / 1000f
             if (timeDeltaSeconds > 0f) {
                 val results = FloatArray(1)
@@ -348,7 +394,8 @@ class LocationManager @Inject constructor(
                     results
                 )
                 val distanceMeters = results.firstOrNull() ?: 0f
-                if (distanceMeters > 0.1f) distanceMeters / timeDeltaSeconds else 0f
+                if (distanceMeters > max(raw.accuracy, previous.accuracy) && timeDeltaSeconds <= 5f)
+                    distanceMeters / timeDeltaSeconds else 0f
             } else {
                 raw.speed
             }
@@ -356,12 +403,7 @@ class LocationManager @Inject constructor(
             raw.speed
         }
 
-        val finalSpeed = when {
-            adjustedSpeed.isNaN() -> raw.speed
-            adjustedSpeed.isInfinite() -> raw.speed
-            adjustedSpeed < 0f -> raw.speed
-            else -> adjustedSpeed
-        }
+        val finalSpeed = adjustedSpeed.takeIf { it.isFinite() && it >= 0f } ?: 0f
 
         val enhanced = raw.copy(speed = finalSpeed)
         lastLocationData = enhanced

@@ -7,11 +7,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.graphics.Color
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import com.example.racerstats.location.PermissionManager
 import androidx.lifecycle.lifecycleScope
 import com.example.racerstats.R
 import com.example.racerstats.databinding.FragmentTrackBinding
@@ -39,6 +39,7 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     private val binding get() = _binding!!
     
     private val viewModel: TrackViewModel by viewModels()
+    private val permissions = PermissionManager(this)
     private var map: GoogleMap? = null
     private var currentTrackPolyline: Polyline? = null
     private var startLineMarkerPrimary: Marker? = null
@@ -49,20 +50,6 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     private var finishLineMarkerSecondary: Marker? = null
     private var finishLinePreviewMarker: Marker? = null
     private var finishLinePolyline: Polyline? = null
-    
-    // 权限请求
-    private val locationPermissionRequest = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-        
-        if (fineLocationGranted && coarseLocationGranted) {
-            setupMapLocation()
-        } else {
-            showSnackbar("Location permission is required for track recording")
-        }
-    }
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -75,21 +62,6 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        // 强制显示所有UI元素
-        binding.actionsContainer.visibility = View.VISIBLE
-        binding.statsContainer.visibility = View.VISIBLE
-        binding.btnStartFinish.visibility = View.VISIBLE
-        binding.btnPause.visibility = View.VISIBLE
-        binding.btnSetLine.visibility = View.VISIBLE
-        
-        // 设置按钮文本以确保它们有内容
-        binding.btnStartFinish.text = "START RECORDING"
-        binding.btnPause.text = "PAUSE"
-        binding.btnSetLine.text = "SET LINE"
-        
-        // 调试：添加日志
-        android.util.Log.d("TrackFragment", "onViewCreated: All UI elements forced visible")
         
         // 初始化地图
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
@@ -114,12 +86,11 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
             android.util.Log.d("TrackFragment", "Start/Finish button clicked")
             when (viewModel.recordingState.value) {
                 is TrackRecorder.RecordingState.Idle -> {
-                    if (checkLocationPermissions()) {
-                        android.util.Log.d("TrackFragment", "Starting recording")
-                        viewModel.startRecording()
-                    } else {
-                        android.util.Log.d("TrackFragment", "Requesting location permissions")
-                        requestLocationPermissions()
+                    permissions.checkAndRequestPermissions { granted ->
+                        if (granted && _binding != null) {
+                            setupMapLocation()
+                            viewModel.startRecording()
+                        } else if (_binding != null) showSnackbar("请授予精确位置权限并开启 GPS")
                     }
                 }
                 is TrackRecorder.RecordingState.Recording -> showSaveTrackDialog()
@@ -130,7 +101,9 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
         binding.btnPause.setOnClickListener {
             when (viewModel.recordingState.value) {
                 is TrackRecorder.RecordingState.Recording -> viewModel.pauseRecording()
-                is TrackRecorder.RecordingState.Paused -> viewModel.resumeRecording()
+                is TrackRecorder.RecordingState.Paused -> permissions.checkAndRequestPermissions { granted ->
+                    if (granted && _binding != null) viewModel.resumeRecording()
+                }
                 else -> {}
             }
         }
@@ -160,16 +133,14 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
         ) == PackageManager.PERMISSION_GRANTED
     }
     
-    private fun requestLocationPermissions() {
-        locationPermissionRequest.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
-    }
-    
     private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.isSaving.collectLatest { saving ->
+                binding.btnStartFinish.isEnabled = !saving
+                binding.btnPause.isEnabled = !saving
+                binding.btnSetLine.isEnabled = !saving
+            }
+        }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.recordingState.collectLatest { state ->
                 updateUI(state)
@@ -197,7 +168,7 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.events.collectLatest { event ->
                 when (event) {
-                    is TrackEditEvent.NavigateBack -> {}
+                    is TrackEditEvent.NavigateBack -> findNavController().popBackStack()
                     is TrackEditEvent.ShowError -> showSnackbar(getString(event.messageRes, *event.formatArgs))
                     is TrackEditEvent.ShowMessage -> showSnackbar(getString(event.messageRes, *event.formatArgs))
                 }
@@ -212,25 +183,25 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
         
         when (state) {
             is TrackRecorder.RecordingState.Idle -> {
-                binding.btnStartFinish.text = "Start Recording"
-                binding.btnPause.visibility = View.VISIBLE // 暂时都显示，方便调试
+                binding.btnStartFinish.setText(R.string.start_recording)
+                binding.btnPause.visibility = View.GONE
                 binding.btnSetLine.visibility = View.VISIBLE
                 binding.tvDistance.text = "0.0 km"
-                binding.tvPointCount.text = "0 points"
+                binding.tvPointCount.text = "0 个轨迹点"
                 android.util.Log.d("TrackFragment", "UI State: Idle")
             }
             is TrackRecorder.RecordingState.Recording -> {
-                binding.btnStartFinish.text = "Finish"
+                binding.btnStartFinish.text = "保存赛道"
                 binding.btnPause.visibility = View.VISIBLE
-                binding.btnPause.text = "Pause"
+                binding.btnPause.text = "暂停"
                 binding.btnSetLine.visibility = View.VISIBLE
                 updateTrackStats(state.distance, state.pointCount)
                 android.util.Log.d("TrackFragment", "UI State: Recording")
             }
             is TrackRecorder.RecordingState.Paused -> {
-                binding.btnStartFinish.text = "Finish"
+                binding.btnStartFinish.text = "保存赛道"
                 binding.btnPause.visibility = View.VISIBLE
-                binding.btnPause.text = "Resume"
+                binding.btnPause.text = "继续"
                 binding.btnSetLine.visibility = View.VISIBLE
                 updateTrackStats(state.distance, state.pointCount)
                 android.util.Log.d("TrackFragment", "UI State: Paused")
@@ -240,7 +211,7 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     
     private fun updateTrackStats(distance: Double, pointCount: Int) {
         binding.tvDistance.text = "%.2f km".format(distance / 1000)
-        binding.tvPointCount.text = "$pointCount points"
+        binding.tvPointCount.text = "$pointCount 个轨迹点"
     }
     
     private fun updateTrackDisplay(points: List<GpsPoint>) {
@@ -361,6 +332,7 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     }
     
     override fun onMapReady(googleMap: GoogleMap) {
+        if (_binding == null) return
         android.util.Log.d("TrackFragment", "Google Maps ready!")
         map = googleMap
         setupMapLocation()
@@ -384,7 +356,9 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
         setDefaultMapLocation()
         
         // 更新按钮文本表示地图已就绪
-        binding.btnStartFinish.text = getString(R.string.start_recording)
+        updateUI(viewModel.recordingState.value)
+        updateTrackDisplay(viewModel.currentTrackPoints.value)
+        renderLinePreview(viewModel.linePreviewState.value)
     }
     
     private fun setupMapLocation() {
@@ -469,7 +443,17 @@ open class TrackFragment : Fragment(), OnMapReadyCallback {
     }
     
     override fun onDestroyView() {
+        map?.setOnMapClickListener(null)
+        clearStartLineGraphics()
+        clearFinishLineGraphics()
+        currentTrackPolyline = null
+        map = null
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onStop() {
+        if (!requireActivity().isChangingConfigurations) viewModel.pauseForBackground()
+        super.onStop()
     }
 }

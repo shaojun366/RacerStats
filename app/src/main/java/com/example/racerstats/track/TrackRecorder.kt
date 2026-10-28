@@ -36,11 +36,14 @@ class TrackRecorder @Inject constructor(
     }
     
     fun pauseRecording() {
+        if (!isRecording) return
         isRecording = false
+        lastPoint = null
         _recordingState.value = RecordingState.Paused(distance, points.size)
     }
     
     fun resumeRecording() {
+        if (_recordingState.value !is RecordingState.Paused) return
         isRecording = true
         _recordingState.value = RecordingState.Recording(distance, points.size)
     }
@@ -49,6 +52,7 @@ class TrackRecorder @Inject constructor(
 
     fun addPoint(latitude: Double, longitude: Double, altitude: Double) {
         if (!isRecording) return
+        if (!latitude.isFinite() || !longitude.isFinite() || latitude !in -90.0..90.0 || longitude !in -180.0..180.0) return
         
         val point = GpsPoint(latitude, longitude, altitude)
         lastPoint?.let { last ->

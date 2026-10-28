@@ -70,7 +70,8 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     
     private fun setupClickListeners() {
         binding.btnStartSession.setOnClickListener {
-            Snackbar.make(binding.root, R.string.start_session, Snackbar.LENGTH_SHORT).show()
+            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
+                .selectedItemId = R.id.nav_live
         }
         
         binding.toolbar.setOnMenuItemClickListener { item ->
@@ -117,6 +118,7 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     }
     
     private fun updateMapDisplay(trackDetails: TrackDetails) {
+        if (map == null) return
         // 清除旧的标记
         trackPolyline?.remove()
         startLineMarkers?.let { (m1, m2) ->
@@ -204,15 +206,21 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
+        if (_binding == null) return
         map = googleMap
         map?.uiSettings?.apply {
             isZoomControlsEnabled = true
             isCompassEnabled = true
             isMapToolbarEnabled = false
         }
+        viewModel.trackDetails.value?.let { updateUI(it) }
     }
 
     override fun onDestroyView() {
+        map = null
+        trackPolyline = null
+        startLineMarkers = null
+        finishLineMarkers = null
         super.onDestroyView()
         _binding = null
     }

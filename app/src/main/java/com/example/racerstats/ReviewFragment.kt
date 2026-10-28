@@ -5,84 +5,75 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.racerstats.databinding.FragmentReviewBinding
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class ReviewFragment : Fragment() {
-    private lateinit var recyclerView: RecyclerView
-    private val lapAdapter = LapAdapter()
-    private val laps = mutableListOf<LapData>()
-
-    data class LapData(
-        val lapNumber: Int,
-        val time: String,
-        val delta: String,
-        val isBest: Boolean = false
-    )
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_review, container, false)
-    }
+class ReviewFragment : Fragment(R.layout.fragment_review) {
+    private val model: SessionViewModel by activityViewModels()
+    private var _binding: FragmentReviewBinding? = null
+    private val adapter = LapAdapter()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        
-        recyclerView = view.findViewById(R.id.recyclerLaps)
-        recyclerView.layoutManager = LinearLayoutManager(context)
-        recyclerView.adapter = lapAdapter
+        _binding = FragmentReviewBinding.bind(view)
+        val ui = _binding!!
+        ui.recyclerLaps.layoutManager = LinearLayoutManager(requireContext())
+        ui.recyclerLaps.adapter = adapter
+        ui.btnClearHistory.setOnClickListener {
+            AlertDialog.Builder(requireContext()).setTitle("清空圈速记录？")
+                .setMessage("将删除已保存的圈速记录。此操作无法撤销。")
+                .setPositiveButton("清空记录") { _, _ -> model.clearHistory() }
+                .setNegativeButton("取消", null).show()
+        }
+        model.history.observe(viewLifecycleOwner) { laps ->
+            ui.tvEmpty.visibility = if (laps.isEmpty()) View.VISIBLE else View.GONE
+            ui.btnClearHistory.isEnabled = laps.isNotEmpty()
+            ui.tvTotalLaps.text = laps.size.toString()
+            ui.tvHistoryBest.text = laps.minOfOrNull { it.duration }?.let(::formatLapTime) ?: "--:--.---"
+            val sessionBest = laps.groupBy { it.sessionId }.mapValues { (_, list) -> list.minOf { it.duration } }
+            adapter.submitList(laps.asReversed().map { LapRow(it, sessionBest.getValue(it.sessionId)) })
+        }
     }
 
-    fun addLap(time: Long, bestTime: Long) {
-        val lapNumber = laps.size + 1
-        val delta = time - bestTime
-        val isBest = time < bestTime
-        
-        val lapData = LapData(
-            lapNumber = lapNumber,
-            time = formatTime(time),
-            delta = "%+.3fs".format(delta / 1000.0),
-            isBest = isBest
-        )
-        
-        laps.add(0, lapData)
-        lapAdapter.notifyItemInserted(0)
+    override fun onDestroyView() {
+        _binding?.recyclerLaps?.adapter = null
+        _binding = null
+        super.onDestroyView()
     }
 
-    private fun formatTime(millis: Long): String {
-        val minutes = (millis / 60000).toInt()
-        val seconds = ((millis % 60000) / 1000).toInt()
-        val milliseconds = (millis % 1000).toInt()
-        return "%02d:%02d.%03d".format(minutes, seconds, milliseconds)
-    }
+    private data class LapRow(val lap: RecordedLap, val best: Long)
 
-    inner class LapAdapter : RecyclerView.Adapter<LapAdapter.LapViewHolder>() {
-        inner class LapViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val tvLapNumber: TextView = view.findViewById(R.id.tvLapNumber)
-            val tvTime: TextView = view.findViewById(R.id.tvTime)
-            val tvDelta: TextView = view.findViewById(R.id.tvDelta)
+    private class LapAdapter : ListAdapter<LapRow, LapAdapter.Holder>(object : DiffUtil.ItemCallback<LapRow>() {
+        override fun areItemsTheSame(old: LapRow, new: LapRow) = old.lap.id == new.lap.id
+        override fun areContentsTheSame(old: LapRow, new: LapRow) = old == new
+    }) {
+        class Holder(view: View) : RecyclerView.ViewHolder(view) {
+            val number: TextView = view.findViewById(R.id.tvLapNumber)
+            val time: TextView = view.findViewById(R.id.tvTime)
+            val delta: TextView = view.findViewById(R.id.tvDelta)
+            val date: TextView = view.findViewById(R.id.tvLapDate)
         }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(
+            LayoutInflater.from(parent.context).inflate(R.layout.item_lap, parent, false))
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LapViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_lap, parent, false)
-            return LapViewHolder(view)
+        override fun onBindViewHolder(holder: Holder, position: Int) {
+            val (lap, best) = getItem(position)
+            holder.number.text = "第 ${lap.number} 圈"
+            holder.time.text = formatLapTime(lap.duration)
+            holder.delta.text = if (lap.duration == best) "本次最佳" else String.format(Locale.US, "+%.3f s", (lap.duration - best) / 1000.0)
+            holder.date.text = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault()).format(Date(lap.createdAt))
+            val color = if (lap.duration == best) R.color.good else R.color.text
+            holder.time.setTextColor(ContextCompat.getColor(holder.itemView.context, color))
+            holder.delta.setTextColor(ContextCompat.getColor(holder.itemView.context, if (lap.duration == best) R.color.good else R.color.muted))
         }
-
-        override fun onBindViewHolder(holder: LapViewHolder, position: Int) {
-            val lap = laps[position]
-            holder.tvLapNumber.text = "Lap ${lap.lapNumber}"
-            holder.tvTime.text = lap.time
-            holder.tvDelta.text = lap.delta
-            
-            if (lap.isBest) {
-                holder.tvTime.setTextColor(ContextCompat.getColor(requireContext(), R.color.good))
-            } else {
-                holder.tvTime.setTextColor(ContextCompat.getColor(requireContext(), R.color.text))
-            }
-        }
-
-        override fun getItemCount() = laps.size
     }
 }

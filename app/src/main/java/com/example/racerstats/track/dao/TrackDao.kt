@@ -44,4 +44,20 @@ interface TrackDao {
         deleteTrackLine(track.id)
         deleteTrack(track)
     }
+
+    @Transaction
+    suspend fun saveTrackWithDetails(track: Track, points: List<TrackPoint>, line: TrackLine) {
+        insertTrack(track)
+        deleteTrackPoints(track.id)
+        deleteTrackLine(track.id)
+        insertPoints(points)
+        insertTrackLine(line)
+    }
+
+    @Transaction
+    suspend fun updateTrackWithLine(trackId: String, name: String, line: TrackLine) {
+        val track = getTrackById(trackId) ?: error("赛道不存在")
+        insertTrack(track.copy(name = name))
+        insertTrackLine(line)
+    }
 }

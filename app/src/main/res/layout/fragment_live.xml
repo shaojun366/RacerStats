@@ -1,9 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <!-- fragment container left intentionally minimal; HUD is provided by activity_main.xml -->
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+    <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:fillViewport="true" android:clipToPadding="false"
+        android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingTop="16dp" android:paddingBottom="8dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/live_title" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/text" />
+        <TextView android:id="@+id/tvGpsStatus" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" android:text="@string/gps_waiting" android:textColor="@color/muted" android:textSize="13sp" />
+        <com.google.android.material.chip.ChipGroup android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" app:chipSpacingHorizontal="8dp">
+            <com.google.android.material.chip.Chip android:id="@+id/chipHz" style="@style/TelemetryChip"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gps_rate_placeholder" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipSats" style="@style/TelemetryChip"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gps_satellites_placeholder" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipAcc" style="@style/TelemetryChip"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/gps_accuracy_placeholder" />
+        </com.google.android.material.chip.ChipGroup>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+            android:background="@drawable/telemetry_card" android:padding="20dp" android:layout_marginTop="16dp">
+            <TextView android:id="@+id/tvSessionState" style="@style/TelemetryLabel" android:text="@string/session_ready" android:textColor="@color/accent" />
+            <TextView android:id="@+id/tvLapTime" android:layout_width="match_parent" android:layout_height="72dp"
+                android:fontFamily="monospace" android:text="@string/lap_time_zero" android:textStyle="bold" android:textColor="@color/text"
+                android:gravity="center_vertical" android:maxLines="1" app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="20sp" app:autoSizeMaxTextSize="52sp" app:autoSizeStepGranularity="1sp" />
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="16dp">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="8dp">
+                    <TextView style="@style/TelemetryLabel" android:text="@string/delta_label" />
+                    <TextView android:id="@+id/tvDelta" style="@style/TelemetryValue" android:text="@string/delta_placeholder" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingStart="8dp">
+                    <TextView style="@style/TelemetryLabel" android:text="@string/prediction_label" />
+                    <TextView android:id="@+id/tvPredicted" style="@style/TelemetryValue" android:text="@string/lap_time_placeholder" />
+                </LinearLayout>
+            </LinearLayout>
+            <FrameLayout android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="20dp" android:background="@color/chip">
+                <View android:layout_width="2dp" android:layout_height="match_parent" android:layout_gravity="center" android:background="@color/muted" />
+                <View android:id="@+id/deltaIndicator" android:layout_width="16dp" android:layout_height="match_parent" android:layout_gravity="center" android:background="@color/muted" />
+            </FrameLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="horizontal">
+                <TextView style="@style/TelemetryLabel" android:layout_width="0dp" android:layout_weight="1" android:text="@string/delta_min" />
+                <TextView style="@style/TelemetryLabel" android:text="@string/delta_max" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="16dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.3" android:orientation="vertical"
+                android:background="@drawable/telemetry_card" android:padding="16dp" android:layout_marginEnd="6dp">
+                <TextView style="@style/TelemetryLabel" android:text="@string/speed_label" />
+                <TextView android:id="@+id/tvSpeed" style="@style/TelemetryValue" android:text="@string/speed_zero" android:textColor="@color/accent" android:textSize="32sp" />
+                <ProgressBar android:id="@+id/speedBar" style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="12dp" android:max="100"
+                    android:progress="0" android:progressTint="@color/accent" android:progressBackgroundTint="@color/chip" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/vmaxContainer" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                android:orientation="vertical" android:background="@drawable/telemetry_card" android:padding="16dp" android:layout_marginStart="6dp"
+                android:clickable="true" android:focusable="true" android:contentDescription="@string/max_speed_description">
+                <TextView style="@style/TelemetryLabel" android:text="@string/max_speed_label" />
+                <TextView android:id="@+id/tvVmax" style="@style/TelemetryValue" android:text="@string/speed_zero" />
+                <TextView style="@style/TelemetryLabel" android:layout_marginTop="6dp" android:text="@string/max_speed_hint" android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="20dp" android:paddingBottom="20dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="8dp">
+                <TextView style="@style/TelemetryLabel" android:text="@string/session_best_label" />
+                <TextView android:id="@+id/tvBestLap" style="@style/TelemetryValue" android:text="@string/lap_time_placeholder" android:textSize="18sp" />
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingStart="8dp">
+                <TextView style="@style/TelemetryLabel" android:text="@string/last_lap_label" />
+                <TextView android:id="@+id/tvLastLap" style="@style/TelemetryValue" android:text="@string/lap_time_placeholder" android:textSize="18sp" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView android:id="@+id/tvLapCount" style="@style/TelemetryLabel" android:text="@string/lap_count_zero" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp"
+            android:text="@string/timing_help"
+            android:textSize="12sp" android:textColor="@color/muted" android:lineSpacingExtra="4dp" />
+    </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+        android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingBottom="8dp" android:background="@color/background">
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnStart" android:layout_width="match_parent" android:layout_height="60dp"
+            android:layout_marginTop="4dp" android:text="@string/start_timing" android:textSize="16sp" app:cornerRadius="16dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnLap" style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginEnd="6dp"
+                android:text="@string/record_lap" android:enabled="false" app:cornerRadius="16dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnStop" style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginStart="6dp"
+                android:text="@string/stop_timing" android:enabled="false" app:cornerRadius="16dp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
