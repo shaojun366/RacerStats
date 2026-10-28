@@ -46,7 +46,7 @@
 
     <fragment
         android:id="@+id/trackRecordingFragment"
-        android:name="com.example.racerstats.track.ui.TrackRecordingFragment"
+        android:name="com.example.racerstats.track.TrackFragment"
         android:label="@string/recording"
         tools:layout="@layout/fragment_track">
         

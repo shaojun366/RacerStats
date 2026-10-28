@@ -2,107 +2,90 @@ package com.example.racerstats.timing
 
 data class LapData(
     val startTime: Long,
-    var endTime: Long,
-    var duration: Long,
+    var endTime: Long = 0,
+    var duration: Long = 0,
     val checkpoints: MutableList<CheckpointData> = mutableListOf()
 )
 
 data class CheckpointData(
-    var timestamp: Long,
-    var distance: Float,  // 从起点的距离
-    var speed: Float,     // m/s
-    var latitude: Double,
-    var longitude: Double
+    val timestamp: Long,
+    val distance: Float,
+    val speed: Float,
+    val latitude: Double,
+    val longitude: Double
 )
 
+/** All timestamps use the same active-session clock, excluding pauses. */
 class LapManager {
     private var bestLap: LapData? = null
     private var currentLap: LapData? = null
-    private val checkpointInterval = 10f  // 每10米记录一个检查点
-    private var lastCheckpointDistance = 0f
-    private var totalLapDistance = 0f  // 将在第一圈完成后设置
-    
-    fun startNewLap() {
-        val startTime = System.currentTimeMillis()
-        currentLap = LapData(startTime, 0, 0)
+    private var lastPoint: CheckpointData? = null
+    private var totalLapDistance = 0f
+
+    fun startNewLap(startTime: Long) {
+        currentLap = LapData(startTime)
+        lastPoint = null
     }
-    
+
+    fun reset() {
+        bestLap = null
+        currentLap = null
+        lastPoint = null
+        totalLapDistance = 0f
+    }
+
     fun updateCurrentLap(
-        timestamp: Long,
-        distance: Float,
-        speed: Float,
-        latitude: Double,
-        longitude: Double
+        timestamp: Long, distance: Float, speed: Float, latitude: Double, longitude: Double
     ): Pair<Double, Long>? {
-        val currentLap = currentLap ?: return null
-        
-        // 如果距离上次检查点已经超过间隔，记录新的检查点
-        if (distance - lastCheckpointDistance >= checkpointInterval) {
-            currentLap.checkpoints.add(CheckpointData(
-                timestamp,
-                distance,
-                speed,
-                latitude,
-                longitude
-            ))
-            lastCheckpointDistance = distance
+        val lap = currentLap ?: return null
+        if (!distance.isFinite() || distance < 0 || !speed.isFinite() || speed < 0 || timestamp < lap.startTime) return null
+        val previous = lastPoint
+        if (previous != null && (timestamp < previous.timestamp || distance < previous.distance)) return null
+        val point = CheckpointData(timestamp, distance, speed, latitude, longitude)
+        lastPoint = point
+        val lastDistance = lap.checkpoints.lastOrNull()?.distance ?: 0f
+        if (distance - lastDistance >= 10f) lap.checkpoints.add(point)
+
+        val best = bestLap ?: return null
+        if (best.checkpoints.isEmpty() || totalLapDistance <= 0) return null
+        val boundedDistance = distance.coerceAtMost(totalLapDistance)
+        val upper = best.checkpoints.firstOrNull { it.distance >= boundedDistance }
+            ?: best.checkpoints.last()
+        val lower = best.checkpoints.lastOrNull { it.distance < boundedDistance }
+        val lowerDistance = lower?.distance ?: 0f
+        val lowerTime = lower?.timestamp ?: best.startTime
+        val fraction = if (upper.distance > lowerDistance) {
+            (boundedDistance - lowerDistance) / (upper.distance - lowerDistance)
+        } else 0f
+        val referenceElapsed = lowerTime - best.startTime +
+            ((upper.timestamp - lowerTime) * fraction).toLong()
+        val elapsed = timestamp - lap.startTime
+        val delta = (elapsed - referenceElapsed) / 1000.0
+        val predicted = if (speed > 0f) {
+            elapsed + ((totalLapDistance - distance).coerceAtLeast(0f) / speed * 1000).toLong()
+        } else 0L
+        return delta to predicted
+    }
+
+    fun completeLap(endTime: Long, finishPoint: CheckpointData? = null) {
+        val lap = currentLap ?: return
+        lap.duration = (endTime - lap.startTime).coerceAtLeast(0L)
+        lap.endTime = endTime
+        val endpoint = finishPoint ?: lastPoint?.takeIf { it.timestamp <= endTime }
+        // Hysteresis may confirm a crossing after samples already beyond the line.
+        lap.checkpoints.removeAll { it.timestamp > endTime || (endpoint != null && it.distance > endpoint.distance) }
+        endpoint?.takeIf { it.distance.isFinite() && it.distance > 0 }?.let { point ->
+            if (lap.checkpoints.lastOrNull()?.distance == point.distance) lap.checkpoints.removeAt(lap.checkpoints.lastIndex)
+            lap.checkpoints.add(point.copy(timestamp = endTime))
         }
-        
-        // 计算与最佳圈速的差值（delta）
-        val delta = calculateDelta(distance, timestamp)
-        
-        // 预测完成时间
-        val predictedTotal = predictTotalTime(distance, speed)
-        
-        return Pair(delta, predictedTotal)
-    }
-    
-    private fun calculateDelta(currentDistance: Float, currentTime: Long): Double {
-        bestLap?.let { best ->
-            if (best.checkpoints.isEmpty() || currentLap?.checkpoints.isNullOrEmpty()) return 0.0
-            
-            // 找到最近的检查点进行比较
-            val currentElapsed = currentTime - (currentLap?.startTime ?: return 0.0)
-            val bestCheckpoint = best.checkpoints.firstOrNull { 
-                it.distance >= currentDistance 
-            } ?: return 0.0
-            
-            val bestElapsed = bestCheckpoint.timestamp - best.startTime
-            return (currentElapsed - bestElapsed) / 1000.0  // 转换为秒
-        }
-        return 0.0
-    }
-    
-    private fun predictTotalTime(currentDistance: Float, currentSpeed: Float): Long {
-        if (totalLapDistance == 0f || currentSpeed <= 0) return 0L
-        
-        val currentLap = currentLap ?: return 0L
-        val elapsed = System.currentTimeMillis() - currentLap.startTime
-        val remainingDistance = totalLapDistance - currentDistance
-        
-        // 基于当前速度预测剩余时间
-        val remainingTime = (remainingDistance / currentSpeed * 1000).toLong()
-        return elapsed + remainingTime
-    }
-    
-    fun completeLap(endTime: Long) {
-        currentLap?.let { lap ->
-            lap.endTime = endTime
-            lap.duration = endTime - lap.startTime
-            
-            // 更新总圈距
-            if (totalLapDistance == 0f && lap.checkpoints.isNotEmpty()) {
-                totalLapDistance = lap.checkpoints.last().distance
-            }
-            
-            // 更新最佳圈速
-            if (bestLap == null || lap.duration < bestLap!!.duration) {
-                bestLap = lap
-            }
+        if (lap.duration > 0 && lap.checkpoints.isNotEmpty() &&
+            (bestLap == null || lap.duration < bestLap!!.duration)) {
+            bestLap = lap
+            totalLapDistance = lap.checkpoints.last().distance
         }
         currentLap = null
-        lastCheckpointDistance = 0f
+        lastPoint = null
     }
-    
+
     fun getBestLapTime(): Long = bestLap?.duration ?: 0L
 }

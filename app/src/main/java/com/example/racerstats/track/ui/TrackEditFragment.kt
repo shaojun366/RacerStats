@@ -67,15 +67,19 @@ class TrackEditFragment : Fragment() {
         val startLineMapFragment = childFragmentManager
             .findFragmentById(R.id.mapStartLine) as SupportMapFragment
         startLineMapFragment.getMapAsync { googleMap ->
+            if (_binding == null) return@getMapAsync
             startLineMap = googleMap
             setupMap(googleMap, isStartLine = true)
+            startLineMapFragment.view?.post { if (_binding != null) updateUI(viewModel.trackEdit.value) }
         }
         
         val finishLineMapFragment = childFragmentManager
             .findFragmentById(R.id.mapFinishLine) as SupportMapFragment
         finishLineMapFragment.getMapAsync { googleMap ->
+            if (_binding == null) return@getMapAsync
             finishLineMap = googleMap
             setupMap(googleMap, isStartLine = false)
+            finishLineMapFragment.view?.post { if (_binding != null) updateUI(viewModel.trackEdit.value) }
         }
     }
     
@@ -147,7 +151,7 @@ class TrackEditFragment : Fragment() {
             updateFinishLineVisibility(state.hasSeparateFinishLine)
             
             // 更新起点线标记
-            updateLineMarkers(
+            if (startLineMap != null) updateLineMarkers(
                 state.startLine,
                 startLineMap,
                 startLineMarkers,
@@ -155,14 +159,14 @@ class TrackEditFragment : Fragment() {
             ) { markers -> startLineMarkers = markers }
             
             // 更新终点线标记
-            if (state.hasSeparateFinishLine) {
+            if (state.hasSeparateFinishLine && finishLineMap != null) {
                 updateLineMarkers(
                     state.finishLine,
                     finishLineMap,
                     finishLineMarkers,
                     BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                 ) { markers -> finishLineMarkers = markers }
-            } else {
+            } else if (finishLineMap != null) {
                 updateLineMarkers(
                     null,
                     finishLineMap,
@@ -255,6 +259,12 @@ class TrackEditFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        startLineMap?.setOnMapClickListener(null)
+        finishLineMap?.setOnMapClickListener(null)
+        startLineMap = null
+        finishLineMap = null
+        startLineMarkers = null
+        finishLineMarkers = null
         super.onDestroyView()
         _binding = null
     }

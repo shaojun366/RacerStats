@@ -1,0 +1,16 @@
+title = "RacerStats secret detection"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "google-maps-api-key"
+description = "Google API key embedded in source or configuration"
+regex = '''AIza[0-9A-Za-z_-]{35}'''
+keywords = ["AIza"]
+
+[[rules]]
+id = "developer-home-path"
+description = "Personal home directory committed in project configuration"
+regex = '''(?:[A-Za-z]:[/\\]+Users[/\\]+[^/\\\s<>"\x00]+|/Users/[^/\s<>"\x00]+|/home/[^/\s<>"\x00]+)'''
+keywords = ["Users", "/home/"]

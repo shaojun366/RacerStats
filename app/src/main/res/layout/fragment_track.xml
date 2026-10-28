@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:layout_marginBottom="80dp"
+        android:layout_marginBottom="0dp"
         android:gravity="center"
         android:background="@color/card"
         android:elevation="8dp"
@@ -21,29 +21,29 @@
 
         <Button
             android:id="@+id/btnStartFinish"
-            android:layout_width="120dp"
+            android:layout_width="0dp" android:layout_weight="1.4"
             android:layout_height="48dp"
-            android:text="START"
+            android:text="@string/start_recording"
             android:textColor="@color/text"
             android:backgroundTint="@color/accent"/>
 
         <Button
             android:id="@+id/btnPause"
-            android:layout_width="100dp"
+            android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="48dp"
-            android:text="PAUSE"
+            android:text="@string/pause"
             android:textColor="@color/text"
             android:backgroundTint="@color/good"
-            android:layout_marginStart="16dp"/>
+            android:layout_marginStart="6dp"/>
 
         <Button
             android:id="@+id/btnSetLine"
-            android:layout_width="100dp"
+            android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="48dp"
-            android:text="SET LINE"
+            android:text="@string/set_line"
             android:textColor="@color/text"
             android:backgroundTint="@color/bad"
-            android:layout_marginStart="16dp"/>
+            android:layout_marginStart="6dp"/>
     </LinearLayout>
 
     <!-- 状态信息区域 -->
@@ -69,7 +69,7 @@
                 android:id="@+id/tvDistance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0.0 km"
+                android:text="@string/track_distance_zero"
                 android:textColor="@color/text"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
 
@@ -77,7 +77,7 @@
                 android:id="@+id/tvPointCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0 points"
+                android:text="@string/track_points_zero"
                 android:textColor="@color/text"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
         </LinearLayout>
@@ -88,12 +88,12 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:layout_marginStart="16dp">
+            android:layout_marginStart="6dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Track Tolerance"
+                android:text="@string/tolerance_label"
                 android:textColor="@color/muted"
                 android:textSize="12sp"/>
 
@@ -102,7 +102,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-                android:text="Street (40m)"
+                android:text="@string/tolerance_default"
                 android:textColor="@color/accent"
                 android:textSize="12sp"
                 android:minWidth="0dp"

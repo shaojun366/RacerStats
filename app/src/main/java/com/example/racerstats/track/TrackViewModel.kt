@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -62,6 +63,9 @@ class TrackViewModel @Inject constructor(
     private var editingFirstPoint: GpsPoint? = null
     
     val recordingState = trackRecorder.recordingState
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving = _isSaving.asStateFlow()
+    private var ownsLocation = false
     
     // 宽容度管理
     private val _currentTolerance = MutableStateFlow(TrackMatcher.THRESHOLD_STREET_CIRCUIT)
@@ -82,8 +86,10 @@ class TrackViewModel @Inject constructor(
     fun startRecording() {
         viewModelScope.launch {
             try {
-                trackRecorder.startRecording()
                 locationManager.startUpdates()
+                ownsLocation = true
+                resetState()
+                trackRecorder.startRecording()
             } catch (e: Exception) {
                 _events.emit(
                     TrackEditEvent.ShowError(
@@ -100,7 +106,16 @@ class TrackViewModel @Inject constructor(
     }
     
     fun resumeRecording() {
+        locationManager.startUpdates()
+        ownsLocation = true
         trackRecorder.resumeRecording()
+    }
+
+    fun pauseForBackground() {
+        if (ownsLocation) {
+            trackRecorder.pauseRecording()
+            locationManager.stopLocationUpdates()
+        }
     }
     
     fun toggleLineSettingMode() {
@@ -119,7 +134,7 @@ class TrackViewModel @Inject constructor(
     }
     
     fun handleMapClick(point: GpsPoint) {
-        when (val state = _lineSettingState.value) {
+        when (_lineSettingState.value) {
             is LineSettingState.SettingStartLine -> {
                 if (startLinePoint1 == null) {
                     startLinePoint1 = point
@@ -173,10 +188,24 @@ class TrackViewModel @Inject constructor(
     }
     
     fun saveTrack(name: String) {
+        if (_isSaving.value) return
+        if (name.isBlank()) {
+            viewModelScope.launch { _events.emit(TrackEditEvent.ShowError(R.string.error_track_name_empty)) }
+            return
+        }
+        if (startLinePoint1 == null || startLinePoint2 == null) {
+            viewModelScope.launch { _events.emit(TrackEditEvent.ShowError(R.string.error_start_line_not_set)) }
+            return
+        }
+        if ((finishLinePoint1 == null) != (finishLinePoint2 == null)) {
+            viewModelScope.launch { _events.emit(TrackEditEvent.ShowError(R.string.error_finish_line_not_set)) }
+            return
+        }
+        _isSaving.value = true
+        trackRecorder.pauseRecording()
         viewModelScope.launch {
             try {
-                val points = trackRecorder.stopRecording()
-                locationManager.stopLocationUpdates()
+                val points = trackRecorder.getPoints()
                 
                 if (startLinePoint1 == null || startLinePoint2 == null) {
                     _events.emit(TrackEditEvent.ShowError(R.string.error_start_line_not_set))
@@ -190,18 +219,25 @@ class TrackViewModel @Inject constructor(
                     null
                 }
                 
-                trackManager.saveTrack(name, points, startLine, finishLine)
+                trackManager.saveTrack(name.trim(), points, startLine, finishLine, _currentTolerance.value)
+                trackRecorder.stopRecording()
+                locationManager.stopLocationUpdates()
+                ownsLocation = false
                 
                 // 重置状态
                 resetState()
                 _events.emit(TrackEditEvent.ShowMessage(R.string.track_saved))
+                _events.emit(TrackEditEvent.NavigateBack)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _events.emit(
                     TrackEditEvent.ShowError(
                         R.string.error_saving_track,
                         arrayOf(e.message ?: "Unknown error")
                     )
                 )
+            } finally {
+                _isSaving.value = false
             }
         }
     }
@@ -218,12 +254,21 @@ class TrackViewModel @Inject constructor(
         editingFirstPoint = null
     }
 
+    override fun onCleared() {
+        if (ownsLocation) {
+            locationManager.stopLocationUpdates()
+            trackRecorder.pauseRecording()
+        }
+        super.onCleared()
+    }
+
     fun deleteTrack(trackId: String) {
         viewModelScope.launch {
             try {
                 trackManager.deleteTrack(trackId)
             } catch (e: Exception) {
-                // TODO: 处理删除错误
+                if (e is CancellationException) throw e
+                _events.emit(TrackEditEvent.ShowError(R.string.error_saving_track, arrayOf(e.message)))
             }
         }
     }

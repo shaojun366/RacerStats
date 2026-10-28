@@ -13,3 +13,22 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local IDE state, credentials, signing material and generated packages
+.idea/
+.env
+.env.*
+!.env.example
+!.env.template
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.apk
+*.aab
+keystore.properties
+signing.properties
+secrets.properties
+google-services.json

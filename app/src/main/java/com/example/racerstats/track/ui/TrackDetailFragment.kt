@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+import com.example.racerstats.SessionViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -40,6 +42,7 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     private val binding get() = _binding!!
     
     private val viewModel: TrackViewModel by viewModels()
+    private val session: SessionViewModel by activityViewModels()
     private val args: TrackDetailFragmentArgs by navArgs()
     
     private var map: GoogleMap? = null
@@ -66,11 +69,14 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
         
         setupClickListeners()
         observeTrackData()
+        session.history.observe(viewLifecycleOwner) { updateBestLap() }
     }
     
     private fun setupClickListeners() {
         binding.btnStartSession.setOnClickListener {
-            Snackbar.make(binding.root, R.string.start_session, Snackbar.LENGTH_SHORT).show()
+            session.selectTrack(args.trackId)
+            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
+                .selectedItemId = R.id.nav_live
         }
         
         binding.toolbar.setOnMenuItemClickListener { item ->
@@ -105,7 +111,7 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
             tvLength.text = getString(R.string.track_length_format, trackDetails.track.length / 1000f)
             tvBestLap.text = getString(
                 R.string.best_lap_format,
-                formatTime(trackDetails.bestLapTimeMillis)
+                formatTime(session.bestLapForTrack(args.trackId))
             )
             tvLastUsed.text = getString(
                 R.string.last_used_format, 
@@ -115,8 +121,13 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
         
         updateMapDisplay(trackDetails)
     }
+
+    private fun updateBestLap() {
+        _binding?.tvBestLap?.text = getString(R.string.best_lap_format, formatTime(session.bestLapForTrack(args.trackId)))
+    }
     
     private fun updateMapDisplay(trackDetails: TrackDetails) {
+        if (map == null) return
         // 清除旧的标记
         trackPolyline?.remove()
         startLineMarkers?.let { (m1, m2) ->
@@ -204,25 +215,26 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
+        if (_binding == null) return
         map = googleMap
         map?.uiSettings?.apply {
             isZoomControlsEnabled = true
             isCompassEnabled = true
             isMapToolbarEnabled = false
         }
+        viewModel.trackDetails.value?.let { updateUI(it) }
     }
 
     override fun onDestroyView() {
+        map = null
+        trackPolyline = null
+        startLineMarkers = null
+        finishLineMarkers = null
         super.onDestroyView()
         _binding = null
     }
 }
 
 private fun formatTime(timeMillis: Long?): String {
-    if (timeMillis == null) return "--:--"
-    val totalSeconds = timeMillis / 1000
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    val milliseconds = (timeMillis % 1000) / 10
-    return String.format(Locale.getDefault(), "%02d:%02d.%02d", minutes, seconds, milliseconds)
+    return timeMillis?.let { com.example.racerstats.formatLapTime(it) } ?: "--:--.---"
 }
