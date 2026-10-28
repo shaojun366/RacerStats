@@ -1,65 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background"
+    android:paddingHorizontal="20dp">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <TextView style="@style/TelemetryLabel"
+        android:layout_marginTop="20dp" android:text="@string/track_library_caption" android:textColor="@color/accent" />
+    <TextView android:id="@+id/toolbar"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:text="@string/track_title"
+        android:textColor="@color/text" android:textSize="28sp" android:textStyle="bold" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:text="@string/track_library_subtitle"
+        android:textColor="@color/muted" android:textSize="13sp" android:lineSpacingExtra="3dp" />
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/background" app:titleTextColor="@color/text"
-            app:title="@string/track_title"
-            app:layout_scrollFlags="scroll|enterAlways"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="24dp" android:layout_marginBottom="12dp"
+        android:orientation="vertical">
+        <TextView android:id="@+id/tvTrackCount" style="@style/TelemetryLabel"
+            android:textColor="@color/text" tools:text="已保存 2 条赛道" />
+        <TextView style="@style/TelemetryLabel" android:layout_marginTop="4dp"
+            android:text="@string/track_list_hint" />
+    </LinearLayout>
 
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvTracks"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:clipToPadding="false"
-            android:padding="8dp"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:clipToPadding="false" android:paddingBottom="12dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:listitem="@layout/item_track"/>
+            tools:listitem="@layout/item_track" />
+        <androidx.core.widget.NestedScrollView android:id="@+id/emptyState"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:fillViewport="true" android:visibility="gone" tools:visibility="visible">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="center" android:padding="24dp">
+                <ImageView android:layout_width="56dp" android:layout_height="56dp"
+                    android:src="@drawable/ic_track" app:tint="@color/accent"
+                    android:contentDescription="@null" android:importantForAccessibility="no" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp" android:text="@string/track_empty_title"
+                    android:gravity="center" android:textColor="@color/text" android:textSize="20sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvEmpty"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:text="@string/track_empty_help"
+                    android:gravity="center" android:textColor="@color/muted" android:textSize="14sp" android:lineSpacingExtra="6dp" />
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
 
-        <TextView
-            android:id="@+id/tvEmpty"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/no_tracks"
-            android:textAppearance="?attr/textAppearanceBody1" android:textColor="@color/muted" android:gravity="center" android:padding="32dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:visibility="visible"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddTrack"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="@string/add_track"
-        app:srcCompat="@drawable/ic_add"/>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <com.google.android.material.button.MaterialButton android:id="@+id/fabAddTrack"
+        android:layout_width="match_parent" android:layout_height="56dp"
+        android:layout_marginBottom="12dp" android:text="@string/add_track"
+        app:icon="@drawable/ic_add" app:iconGravity="textStart" app:cornerRadius="16dp" />
+</LinearLayout>

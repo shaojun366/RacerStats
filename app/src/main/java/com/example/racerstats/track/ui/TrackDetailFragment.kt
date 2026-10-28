@@ -2,22 +2,27 @@ package com.example.racerstats.track.ui
 
 import android.os.Bundle
 import android.view.*
+import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.fragment.app.activityViewModels
 import com.example.racerstats.SessionViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.racerstats.R
 import com.example.racerstats.databinding.FragmentTrackDetailBinding
+import com.example.racerstats.maps.MapSupport
+import com.example.racerstats.timing.TimingCourse
 import com.example.racerstats.track.TrackViewModel
 import com.example.racerstats.track.model.GpsPoint
 import com.example.racerstats.track.model.TrackDetails
+import com.example.racerstats.track.model.TrackEditEvent
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
@@ -49,6 +54,7 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     private var trackPolyline: Polyline? = null
     private var startLineMarkers: Pair<Marker, Marker>? = null
     private var finishLineMarkers: Pair<Marker, Marker>? = null
+    private val gatePolylines = mutableListOf<Polyline>()
     
     private val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
 
@@ -64,8 +70,7 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        val mapFragment = childFragmentManager.findFragmentById(R.id.mapView) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        MapSupport.bind(this, R.id.mapView, binding.mapStatus, binding.routePreview, this)
         
         setupClickListeners()
         observeTrackData()
@@ -73,10 +78,14 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     }
     
     private fun setupClickListeners() {
+        binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
         binding.btnStartSession.setOnClickListener {
-            session.selectTrack(args.trackId)
-            requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
-                .selectedItemId = R.id.nav_live
+            if (session.selectTrack(args.trackId)) {
+                requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
+                    .selectedItemId = R.id.nav_live
+            } else {
+                Snackbar.make(binding.root, R.string.track_selection_locked, Snackbar.LENGTH_LONG).show()
+            }
         }
         
         binding.toolbar.setOnMenuItemClickListener { item ->
@@ -98,33 +107,63 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     
     private fun observeTrackData() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.loadTrackDetails(args.trackId)
-            viewModel.trackDetails.collectLatest { trackDetails ->
-                trackDetails?.let { updateUI(it) }
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.deletedTrackId.collectLatest { deletedId ->
+                    if (deletedId == args.trackId) findNavController().navigateUp()
+                }
             }
         }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.events.collectLatest { event ->
+                if (event is TrackEditEvent.ShowError) {
+                    Snackbar.make(binding.root, getString(event.messageRes, *event.formatArgs), Snackbar.LENGTH_LONG).show()
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.trackDetails.collectLatest { trackDetails ->
+                    trackDetails?.let { updateUI(it) }
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Editing uses another ViewModel; reload when returning so names and gates stay current.
+        viewModel.loadTrackDetails(args.trackId)
     }
     
     private fun updateUI(trackDetails: TrackDetails) {
         binding.apply {
             tvTrackName.text = trackDetails.track.name
-            tvLength.text = getString(R.string.track_length_format, trackDetails.track.length / 1000f)
-            tvBestLap.text = getString(
-                R.string.best_lap_format,
-                formatTime(session.bestLapForTrack(args.trackId))
-            )
+            tvLength.text = getString(R.string.track_distance_value, trackDetails.track.length / 1000f)
+            tvBestLap.text = formatTime(session.bestLapForTrack(args.trackId))
+            tvPointCount.text = getString(R.string.track_detail_points, trackDetails.points.size)
+            tvCourseType.setText(when {
+                trackDetails.startLine == null -> R.string.track_missing_gate
+                isClosed(trackDetails) -> R.string.track_closed_course
+                else -> R.string.track_open_course
+            })
             tvLastUsed.text = getString(
-                R.string.last_used_format, 
+                R.string.track_created_short,
                 dateFormat.format(Date(trackDetails.track.createdAt))
             )
+            btnStartSession.isEnabled = trackDetails.startLine != null && trackDetails.track.length >= 100f
+            routePreview.setRoute(trackDetails.points, trackDetails.startLine, trackDetails.finishLine)
         }
         
         updateMapDisplay(trackDetails)
     }
 
     private fun updateBestLap() {
-        _binding?.tvBestLap?.text = getString(R.string.best_lap_format, formatTime(session.bestLapForTrack(args.trackId)))
+        _binding?.tvBestLap?.text = formatTime(session.bestLapForTrack(args.trackId))
     }
+
+    private fun isClosed(details: TrackDetails): Boolean = details.startLine?.let {
+        TimingCourse(it, details.finishLine, details.track.length).isClosed
+    } ?: false
     
     private fun updateMapDisplay(trackDetails: TrackDetails) {
         if (map == null) return
@@ -138,6 +177,8 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
             m1.remove()
             m2.remove()
         }
+        gatePolylines.forEach { it.remove() }
+        gatePolylines.clear()
         
         // 绘制轨迹
         val points = trackDetails.points.map { LatLng(it.latitude, it.longitude) }
@@ -157,15 +198,17 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
                 line.second,
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
             )
+            drawGate(line, R.color.good)
         }
         
         // 绘制终点线
-        trackDetails.finishLine?.let { line ->
+        trackDetails.finishLine?.takeUnless { isClosed(trackDetails) }?.let { line ->
             finishLineMarkers = addLineMarkers(
                 line.first,
                 line.second,
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
             )
+            drawGate(line, R.color.bad)
         }
         
         // 移动相机到轨迹中心
@@ -173,8 +216,22 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
             val bounds = LatLngBounds.builder().apply {
                 points.forEach { include(it) }
             }.build()
-            map?.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100))
+            val currentMap = map
+            binding.mapView.doOnLayout { mapView ->
+                if (_binding != null && map === currentMap && mapView.width > 0 && mapView.height > 0) {
+                    currentMap?.moveCamera(CameraUpdateFactory.newLatLngBounds(
+                        bounds, mapView.width, mapView.height,
+                        (40 * resources.displayMetrics.density).toInt().coerceAtMost(mapView.width / 4)
+                    ))
+                }
+            }
         }
+    }
+
+    private fun drawGate(line: Pair<GpsPoint, GpsPoint>, color: Int) {
+        map?.addPolyline(PolylineOptions()
+            .add(LatLng(line.first.latitude, line.first.longitude), LatLng(line.second.latitude, line.second.longitude))
+            .color(resources.getColor(color, null)).width(8f))?.let(gatePolylines::add)
     }
     
     private fun addLineMarkers(
@@ -205,10 +262,10 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
     
     private fun showDeleteConfirmation() {
         MaterialAlertDialogBuilder(requireContext())
-            .setMessage(R.string.delete_track_confirmation)
+            .setTitle(R.string.delete)
+            .setMessage(getString(R.string.track_delete_named, viewModel.trackDetails.value?.track?.name.orEmpty()))
             .setPositiveButton(R.string.delete) { _, _ ->
                 viewModel.deleteTrack(args.trackId)
-                findNavController().navigateUp()
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
@@ -230,6 +287,7 @@ class TrackDetailFragment : Fragment(), OnMapReadyCallback {
         trackPolyline = null
         startLineMarkers = null
         finishLineMarkers = null
+        gatePolylines.clear()
         super.onDestroyView()
         _binding = null
     }

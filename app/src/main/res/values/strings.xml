@@ -79,7 +79,7 @@
     <string name="history_empty">还没有圈速记录\n\n开始计时后，点击「手动过线」\n你的成绩会自动保存在这里。</string>
     <string name="track_distance_zero">0.0 km</string>
     <string name="track_points_zero">0 个轨迹点</string>
-    <string name="tolerance_label">匹配容差</string>
+    <string name="tolerance_label">重录匹配容差</string>
     <string name="tolerance_default">街道 (40m)</string>
     <string name="choose_timing_track">选择计时方式与赛道</string>
     <string name="manual_timing_option">手动计时 · 不关联赛道</string>

@@ -1,105 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:menu="@menu/track_detail_menu"/>
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/mapView"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@id/infoCard"
-            app:layout_constraintTop_toTopOf="parent"/>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/infoCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardElevation="4dp"
-            app:cardCornerRadius="8dp"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/tvTrackName"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:text="Suzuka Circuit"/>
-
-                <TextView
-                    android:id="@+id/tvLength"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textAppearance="?attr/textAppearanceBody1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvTrackName"
-                    tools:text="Length: 5.807 km"/>
-
-                <TextView
-                    android:id="@+id/tvBestLap"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textAppearance="?attr/textAppearanceBody1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvLength"
-                    tools:text="Best Lap: 1:32.456"/>
-
-                <TextView
-                    android:id="@+id/tvLastUsed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textAppearance="?attr/textAppearanceBody2"
-                    android:textColor="?android:attr/textColorSecondary"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvBestLap"
-                    tools:text="Last used: 2025/11/05"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnStartSession"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/start_session"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvLastUsed"/>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@color/background">
+    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar"
+        android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
+        android:background="@color/background" app:title="@string/track_detail_title"
+        app:titleTextColor="@color/text" app:navigationIcon="@drawable/ic_track_back"
+        app:navigationContentDescription="@string/track_back" app:menu="@menu/track_detail_menu" />
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:fillViewport="true" android:clipToPadding="false">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:paddingHorizontal="20dp" android:paddingBottom="16dp">
+            <TextView android:id="@+id/tvTrackName"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" android:textColor="@color/text" android:textSize="26sp"
+                android:textStyle="bold" tools:text="自动计时测试赛道" />
+            <TextView android:id="@+id/tvCourseType" style="@style/TelemetryLabel"
+                android:layout_width="match_parent" android:layout_marginTop="8dp" android:textColor="@color/accent"
+                tools:text="闭合赛道 · 连续记圈" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent" android:layout_height="220dp" android:layout_marginTop="20dp"
+                app:cardBackgroundColor="@color/card" app:cardCornerRadius="20dp" app:cardElevation="0dp"
+                app:strokeColor="@color/line" app:strokeWidth="1dp">
+                <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
+                    <androidx.fragment.app.FragmentContainerView android:id="@+id/mapView"
+                        android:layout_width="match_parent" android:layout_height="match_parent" />
+                    <com.example.racerstats.maps.TrackRouteView android:id="@+id/routePreview"
+                        android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone" />
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <TextView android:id="@+id/mapStatus"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" android:textColor="@color/muted" android:textSize="12sp"
+                android:lineSpacingExtra="3dp" android:visibility="gone" />
+            <LinearLayout android:id="@+id/infoCard"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" android:background="@drawable/telemetry_card"
+                android:orientation="vertical" android:padding="20dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                        android:orientation="vertical" android:layout_marginEnd="16dp">
+                        <TextView style="@style/TelemetryLabel" android:text="@string/track_route_label" />
+                        <TextView android:id="@+id/tvLength" style="@style/TelemetryValue" tools:text="0.100 km" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:orientation="vertical">
+                        <TextView style="@style/TelemetryLabel" android:layout_width="match_parent" android:text="@string/track_best_automatic" />
+                        <TextView android:id="@+id/tvBestLap" style="@style/TelemetryValue" android:textColor="@color/accent"
+                            android:text="@string/lap_time_placeholder" tools:text="00:03.247" />
+                    </LinearLayout>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="16dp" android:background="@color/line" />
+                <TextView android:id="@+id/tvPointCount" style="@style/TelemetryLabel"
+                    android:layout_width="match_parent" tools:text="6 个轨迹点" />
+                <TextView android:id="@+id/tvLastUsed" style="@style/TelemetryLabel"
+                    android:layout_width="match_parent" android:layout_marginTop="6dp" tools:text="创建于 2026/10/28" />
+            </LinearLayout>
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="14dp" android:text="@string/track_detail_help"
+                android:textColor="@color/muted" android:textSize="13sp" android:lineSpacingExtra="4dp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+    <com.google.android.material.button.MaterialButton android:id="@+id/btnStartSession"
+        android:layout_width="match_parent" android:layout_height="56dp"
+        android:layout_marginHorizontal="20dp" android:layout_marginBottom="12dp"
+        android:text="@string/start_session" android:enabled="false" app:cornerRadius="16dp" />
+</LinearLayout>

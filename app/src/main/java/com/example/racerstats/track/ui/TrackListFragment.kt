@@ -8,10 +8,15 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.racerstats.R
 import com.example.racerstats.databinding.FragmentTrackListBinding
 import com.example.racerstats.track.TrackViewModel
 import com.example.racerstats.track.model.Track
+import com.example.racerstats.track.model.TrackEditEvent
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -60,15 +65,28 @@ class TrackListFragment : Fragment() {
     
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.tracks.collectLatest { tracks ->
-                trackAdapter.submitList(tracks)
-                updateEmptyState(tracks.isEmpty())
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.tracks.collectLatest { tracks ->
+                        trackAdapter.submitList(tracks)
+                        binding.tvTrackCount.text = getString(R.string.track_library_count, tracks.size)
+                        updateEmptyState(tracks.isEmpty())
+                    }
+                }
+                launch {
+                    viewModel.events.collectLatest { event ->
+                        if (event is TrackEditEvent.ShowError) {
+                            Snackbar.make(binding.root, getString(event.messageRes, *event.formatArgs), Snackbar.LENGTH_LONG).show()
+                        }
+                    }
+                }
             }
         }
     }
     
     private fun updateEmptyState(isEmpty: Boolean) {
-        binding.tvEmpty.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.emptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.rvTracks.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
     
     private fun navigateToTrackDetail(track: Track) {
@@ -85,15 +103,17 @@ class TrackListFragment : Fragment() {
     
     private fun showDeleteConfirmation(track: Track) {
         MaterialAlertDialogBuilder(requireContext())
-            .setMessage("Are you sure you want to delete this track?")
-            .setPositiveButton("Delete") { _, _ ->
+            .setTitle(R.string.delete)
+            .setMessage(getString(R.string.track_delete_named, track.name))
+            .setPositiveButton(R.string.delete) { _, _ ->
                 viewModel.deleteTrack(track.id)
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
     
     override fun onDestroyView() {
+        binding.rvTracks.adapter = null
         super.onDestroyView()
         _binding = null
     }

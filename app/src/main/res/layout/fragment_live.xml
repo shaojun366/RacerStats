@@ -11,7 +11,8 @@
         <com.google.android.material.button.MaterialButton android:id="@+id/btnSelectTrack"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp"
-            android:text="@string/manual_track_selection" android:maxLines="1" android:ellipsize="end"
+            android:text="@string/manual_track_selection" android:maxLines="2" android:ellipsize="end"
+            android:textColor="@color/text" app:iconTint="@color/accent" app:strokeColor="@color/line"
             app:icon="@drawable/ic_track" app:cornerRadius="14dp" />
         <TextView android:id="@+id/tvGpsStatus" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="6dp" android:text="@string/gps_waiting" android:textColor="@color/muted" android:textSize="13sp" />

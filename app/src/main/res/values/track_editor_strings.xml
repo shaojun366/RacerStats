@@ -1,0 +1,22 @@
+<resources>
+    <string name="editor_title">编辑赛道</string>
+    <string name="editor_back">返回赛道</string>
+    <string name="editor_description">调整赛道名称和过线位置，为下一次计时做好准备。</string>
+    <string name="editor_track_name">赛道名称</string>
+    <string name="editor_start_step">01 · 开始计时</string>
+    <string name="editor_finish_step">02 · 完成计时</string>
+    <string name="editor_start_title">起点线</string>
+    <string name="editor_finish_title">独立终点线</string>
+    <string name="editor_line_help">点击下方按钮，再依次选择道路两侧的两个端点。计时线应横跨行驶路线。</string>
+    <string name="editor_first_point">正在设置：点击地图选择第一个端点；再次点击按钮可重新选择。</string>
+    <string name="editor_second_point">第一个端点已选。请点击道路另一侧，完成计时线。</string>
+    <string name="editor_set_start">重新设置起点线</string>
+    <string name="editor_set_finish">重新设置终点线</string>
+    <string name="editor_separate_finish">使用独立终点线</string>
+    <string name="editor_finish_help">闭合赛道使用同一条起终点线。开放路线可启用独立终点线，完成一次后重新等待起点。</string>
+    <string name="editor_save">保存修改</string>
+    <string name="editor_saving">正在保存…</string>
+    <string name="editor_loading">正在加载赛道…</string>
+    <string name="editor_saved_line">已设置 · %1$.1f 米</string>
+    <string name="editor_line_invalid">计时线长度需要在 2–500 米之间，请重新选择。</string>
+</resources>

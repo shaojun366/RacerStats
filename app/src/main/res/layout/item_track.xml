@@ -3,62 +3,34 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="4dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
-
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp" android:clickable="true" android:focusable="true"
+    app:cardBackgroundColor="@color/card" app:cardCornerRadius="20dp"
+    app:cardElevation="0dp" app:strokeColor="@color/line" app:strokeWidth="1dp">
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
-
-        <TextView
-            android:id="@+id/tvTrackName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:textAppearance="?attr/textAppearanceSubtitle1"
-            android:textStyle="bold"
+        android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp">
+        <TextView android:id="@+id/tvTrackName"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp" android:textColor="@color/text"
+            android:textSize="19sp" android:textStyle="bold" android:maxLines="3" android:ellipsize="end"
             app:layout_constraintEnd_toStartOf="@id/btnMore"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Suzuka Circuit" />
-
-        <TextView
-            android:id="@+id/tvLength"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textAppearance="?attr/textAppearanceBody2"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvTrackName"
-            tools:text="Length: 5.807 km" />
-
-        <TextView
-            android:id="@+id/tvLastUsed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textAppearance="?attr/textAppearanceCaption"
-            android:textColor="?android:attr/textColorSecondary"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvLength"
-            tools:text="Last used: 2025/11/05" />
-
-        <ImageButton
-            android:id="@+id/btnMore"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
+            tools:text="自动计时测试赛道" />
+        <ImageButton android:id="@+id/btnMore"
+            android:layout_width="48dp" android:layout_height="48dp"
+            android:layout_marginTop="-8dp" android:layout_marginEnd="-8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/more_options"
-            android:src="@drawable/ic_more_vert"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="?android:attr/textColorSecondary" />
-
+            android:contentDescription="@string/more_options" android:src="@drawable/ic_more_vert"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" app:tint="@color/muted" />
+        <TextView android:id="@+id/tvLength" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginTop="18dp" android:textColor="@color/accent" android:textSize="24sp"
+            android:fontFamily="monospace" android:maxLines="1" app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="16sp" app:autoSizeMaxTextSize="24sp"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTrackName" tools:text="1.280 km" />
+        <TextView android:id="@+id/tvLastUsed" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:textColor="@color/muted" android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvLength" tools:text="创建于 2026/10/28" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,25 @@
+<resources>
+    <string name="maps_unconfigured">底图未配置 · 当前显示本地轨迹\n点击查看地图接入说明</string>
+    <string name="maps_setup_title">地图与 GPS</string>
+    <string name="maps_setup_message">此版本尚未配置 Google Maps 底图。手机 GPS 与已保存赛道的计时仍可使用；在地图上设置起终点线需要先配置底图。\n\n开发者需启用 Maps SDK for Android，在本机构建环境中设置 MAPS_API_KEY，并限制包名及签名证书。配置后重新构建安装，详见项目接入文档。</string>
+    <string name="maps_setup_docs">打开接入文档</string>
+    <string name="maps_no_browser">未找到浏览器，请在项目 README 中查看 Maps / GPS 接入说明</string>
+    <string name="route_schematic">轨迹示意 · 无底图</string>
+    <string name="route_empty">录制后在这里显示 GPS 轨迹</string>
+    <string name="route_legend">绿色 起点 · 红色 独立终点</string>
+    <string name="route_accessibility">本地轨迹示意图，%d 个轨迹点，朝上为北</string>
+    <string name="recording_subtitle">记录路线，再设置起终点线</string>
+    <string name="recording_help">先开始录制，再点击地图两点设置起点线。轨迹至少 100 米，闭合赛道可共用起终点。</string>
+    <string name="recording_without_maps">可录制 GPS 轨迹；地图尚未配置，暂不能设置起终点线或保存新赛道。</string>
+    <string name="recording_ready">准备录制</string>
+    <string name="recording_active">正在录制 GPS 轨迹</string>
+    <string name="recording_paused">已暂停 · 可继续或保存</string>
+    <string name="recording_distance">累计距离</string>
+    <string name="recording_save">保存赛道</string>
+    <string name="recording_saving">正在保存…</string>
+    <string name="recording_points">%d 个轨迹点</string>
+    <string name="recording_distance_value">%.2f km</string>
+    <string name="recording_gps_required">请授予精确位置权限并开启 GPS</string>
+    <string name="recording_map_permission">无法显示当前位置，请检查位置权限</string>
+    <string name="navigate_back">返回</string>
+</resources>
