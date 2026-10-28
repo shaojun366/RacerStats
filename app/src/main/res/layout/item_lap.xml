@@ -1,14 +1,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal"
     android:gravity="center_vertical" android:padding="16dp" android:layout_marginBottom="10dp" android:background="@drawable/telemetry_card">
-    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:paddingEnd="12dp" android:orientation="vertical">
         <TextView android:id="@+id/tvLapNumber" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text" android:textSize="14sp" />
         <TextView android:id="@+id/tvLapTrack" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="6dp" android:textColor="@color/muted" android:textSize="11sp" android:maxLines="1" android:ellipsize="end" />
+            android:layout_marginTop="6dp" android:textColor="@color/muted" android:textSize="12sp" android:maxLines="2" android:ellipsize="end" />
         <TextView android:id="@+id/tvLapDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/muted" android:textSize="11sp" />
     </LinearLayout>
-    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:orientation="vertical" android:gravity="end">
-        <TextView android:id="@+id/tvTime" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="end" android:fontFamily="monospace" android:textColor="@color/text" android:textSize="22sp" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:orientation="vertical" android:gravity="end">
+        <TextView xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/tvTime" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="end" android:fontFamily="monospace" android:textColor="@color/text" android:textSize="22sp" android:maxLines="1" app:autoSizeTextType="uniform" app:autoSizeMinTextSize="14sp" app:autoSizeMaxTextSize="22sp" />
         <TextView android:id="@+id/tvDelta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/muted" android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>

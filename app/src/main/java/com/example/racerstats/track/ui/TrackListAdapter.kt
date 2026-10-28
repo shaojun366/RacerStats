@@ -44,11 +44,11 @@ class TrackListAdapter(
 
                 tvTrackName.text = track.name
                 tvLength.text = itemView.context.getString(
-                    R.string.track_length_format,
+                    R.string.track_distance_value,
                     track.length / 1000f
                 )
                 tvLastUsed.text = itemView.context.getString(
-                    R.string.last_used_format,
+                    R.string.track_created_short,
                     dateFormat.format(Date(track.createdAt))
                 )
 

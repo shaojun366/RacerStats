@@ -65,6 +65,8 @@ class TrackViewModel @Inject constructor(
     val recordingState = trackRecorder.recordingState
     private val _isSaving = MutableStateFlow(false)
     val isSaving = _isSaving.asStateFlow()
+    private val _deletedTrackId = MutableStateFlow<String?>(null)
+    val deletedTrackId = _deletedTrackId.asStateFlow()
     private var ownsLocation = false
     
     // 宽容度管理
@@ -263,12 +265,18 @@ class TrackViewModel @Inject constructor(
     }
 
     fun deleteTrack(trackId: String) {
+        if (_isSaving.value) return
+        _isSaving.value = true
         viewModelScope.launch {
             try {
                 trackManager.deleteTrack(trackId)
+                // State survives rotation; a callback to the old Fragment could lose navigation.
+                _deletedTrackId.value = trackId
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 _events.emit(TrackEditEvent.ShowError(R.string.error_saving_track, arrayOf(e.message)))
+            } finally {
+                _isSaving.value = false
             }
         }
     }
@@ -298,6 +306,7 @@ class TrackViewModel @Inject constructor(
                 finishLine = if (hasSeparateFinish) details.finishLine else null,
                 hasSeparateFinishLine = hasSeparateFinish,
                 trackBounds = calculateBounds(details.points),
+                points = details.points,
                 isLoading = false
             )
         }
@@ -324,13 +333,10 @@ class TrackViewModel @Inject constructor(
     }
 
     fun startSettingFinishLine() {
-        _trackEdit.update { state ->
-            if (!state.hasSeparateFinishLine) state else {
-                editingLine = EditingLine.FINISH
-                editingFirstPoint = null
-                state.copy(isSettingLine = true)
-            }
-        }
+        if (!_trackEdit.value.hasSeparateFinishLine) return
+        editingLine = EditingLine.FINISH
+        editingFirstPoint = null
+        _trackEdit.update { it.copy(isSettingLine = true) }
     }
 
     fun handleStartLineClick(point: GpsPoint) {
@@ -348,6 +354,7 @@ class TrackViewModel @Inject constructor(
     }
 
     fun saveTrack() {
+        if (_isSaving.value) return
         val state = _trackEdit.value
         val trackId = state.trackId
         if (trackId.isNullOrBlank()) {
@@ -383,18 +390,22 @@ class TrackViewModel @Inject constructor(
             null
         }
 
+        _isSaving.value = true
         viewModelScope.launch {
             try {
                 trackManager.updateTrack(trackId, state.name, startLine, finishLine)
                 _events.emit(TrackEditEvent.ShowMessage(R.string.track_saved))
                 _events.emit(TrackEditEvent.NavigateBack)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _events.emit(
                     TrackEditEvent.ShowError(
                         R.string.error_saving_track,
                         arrayOf(e.message ?: "Unknown error")
                     )
                 )
+            } finally {
+                _isSaving.value = false
             }
         }
     }

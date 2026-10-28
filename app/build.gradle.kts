@@ -16,6 +16,8 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        // Maps SDK only. Android GPS_PROVIDER needs no Cloud key. See docs/maps-gps-integration.md.
+        // Keep real values in personal Gradle properties / CI environment, never in this repository.
         manifestPlaceholders["MAPS_API_KEY"] = providers.gradleProperty("MAPS_API_KEY")
             .orElse(providers.environmentVariable("MAPS_API_KEY")).getOrElse("")
 

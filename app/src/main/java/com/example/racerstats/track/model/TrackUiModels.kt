@@ -26,6 +26,7 @@ data class TrackEditState(
     val hasSeparateFinishLine: Boolean = false,
     val isSettingLine: Boolean = false,
     val trackBounds: TrackBounds? = null,
+    val points: List<GpsPoint> = emptyList(),
     val isLoading: Boolean = false
 )
 

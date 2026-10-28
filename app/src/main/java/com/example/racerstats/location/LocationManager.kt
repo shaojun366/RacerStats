@@ -31,7 +31,8 @@ class LocationManager @Inject constructor(
     companion object {
         private const val DRAGY_SERVICE_UUID = "0000fff0-0000-1000-8000-00805f9b34fb" // Dragy Pro 服务 UUID
         private const val DRAGY_DATA_CHAR_UUID = "0000fff1-0000-1000-8000-00805f9b34fb" // 数据特征值 UUID
-        private const val MIN_UPDATE_INTERVAL = 10L // 最小更新间隔（毫秒）
+        // Requested minimum only; phone hardware determines the actual rate (not a 100 Hz guarantee).
+        private const val MIN_UPDATE_INTERVAL = 10L
         private const val MIN_DISTANCE = 0.1f // 最小距离更新（米）
         private const val RATE_CALCULATION_WINDOW = 1000L // 计算采样率的时间窗口（毫秒）
     }
@@ -96,7 +97,7 @@ class LocationManager @Inject constructor(
 
     // 定义数据类
     data class LocationData(
-        val timestamp: Long,
+        val timestamp: Long, // elapsedRealtime milliseconds, NOT Unix epoch. See docs/maps-gps-integration.md.
         val latitude: Double,
         val longitude: Double,
         val speed: Float,    // m/s

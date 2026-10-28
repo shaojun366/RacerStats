@@ -1,0 +1,21 @@
+<resources>
+    <string name="track_library_caption">赛道库 · 本地保存</string>
+    <string name="track_library_subtitle">记录路线，设置过线点，开始下一次挑战。</string>
+    <string name="track_library_count">已保存 %1$d 条赛道</string>
+    <string name="track_empty_title">从第一条赛道开始</string>
+    <string name="track_empty_help">录制至少 100 米的轨迹，再在地图上设置起点线。保存后即可使用自动计时。</string>
+    <string name="track_list_hint">点击赛道查看路线与成绩</string>
+    <string name="track_route_label">轨迹长度</string>
+    <string name="track_distance_value">%1$.3f km</string>
+    <string name="track_created_short">创建于 %1$s</string>
+    <string name="track_delete_named">删除「%1$s」及其轨迹？已完成的圈速记录仍保留在回顾页。</string>
+    <string name="track_detail_title">赛道详情</string>
+    <string name="track_back">返回赛道列表</string>
+    <string name="track_best_automatic">自动计时 · 历史最佳</string>
+    <string name="track_detail_points">%1$d 个轨迹点</string>
+    <string name="track_closed_course">闭合赛道 · 连续记圈</string>
+    <string name="track_open_course">独立终点 · 按次计时</string>
+    <string name="track_missing_gate">尚未设置起点线</string>
+    <string name="track_detail_help">前往实时页并启用自动计时，通过起点后开始记录。</string>
+    <string name="track_selection_locked">请先结束当前计时，再切换赛道。</string>
+</resources>
